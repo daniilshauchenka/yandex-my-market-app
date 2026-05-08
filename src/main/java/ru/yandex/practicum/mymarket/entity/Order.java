@@ -30,12 +30,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @OneToMany(
         mappedBy = "order",
         cascade = CascadeType.ALL,
         orphanRemoval = true
     )
-    private List<OrderItem> items;
+    private List<OrderItem> items = new ArrayList<>();
 
     @Column(name = "total_sum", nullable = false, precision = 19, scale = 2)
     private BigDecimal totalSum;

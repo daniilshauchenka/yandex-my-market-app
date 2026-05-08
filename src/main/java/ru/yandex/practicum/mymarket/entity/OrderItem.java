@@ -1,5 +1,6 @@
 package ru.yandex.practicum.mymarket.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,7 +35,8 @@ public class OrderItem {
 
     private String title;
 
-    private Long price;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal price;
 
     private Integer count;
 }
