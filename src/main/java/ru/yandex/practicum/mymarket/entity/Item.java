@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,12 +27,15 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "img_path")
     private String imgPath;
 
-    private Long price;
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal price;
 }
