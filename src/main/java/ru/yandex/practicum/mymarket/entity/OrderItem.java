@@ -33,10 +33,12 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal price;
 
+    @Column(nullable = false)
     private Integer count;
 }

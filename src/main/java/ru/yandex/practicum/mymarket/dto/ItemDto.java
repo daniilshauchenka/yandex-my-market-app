@@ -7,7 +7,7 @@ public record ItemDto(
     String title,
     String description,
     String imgPath,
-    BigDecimal price
+    BigDecimal price,
+    Integer count
 ) {
-
 }
