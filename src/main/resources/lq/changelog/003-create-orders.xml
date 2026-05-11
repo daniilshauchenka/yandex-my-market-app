@@ -16,7 +16,7 @@
                     primaryKey="true"
                     nullable="false"/>
             </column>
-            <column name="total_sum" type="BIGINT">
+            <column name="total_sum" type="NUMERIC(19,2)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

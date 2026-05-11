@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/market_db
+    url: jdbc:postgresql://localhost:5433/market_db
     username: postgres
     password: postgres
 
@@ -13,10 +13,10 @@ spring:
         format_sql: true
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    change-log: classpath:lq/db.changelog-master.xml
 
   messages:
-    basename: i18n/messages
+    basename: messages
     encoding: UTF-8
 
 server:
