@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = AllowedPageSizeValidator.class)
 public @interface AllowedPageSize {
 
-    String message() default "Invalid page size";
+  String message() default "Invalid page size";
 
-    Class<?>[] groups() default {};
+  Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default {};
+  Class<? extends Payload>[] payload() default {};
 }

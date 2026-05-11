@@ -1,6 +1,5 @@
 package ru.yandex.practicum.mymarket.service;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,112 +32,73 @@ import ru.yandex.practicum.mymarket.util.TestData;
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
 
-    @Mock
-    private ItemRepository itemRepository;
+  @Mock private ItemRepository itemRepository;
 
-    @Mock
-    private CartItemRepository cartItemRepository;
+  @Mock private CartItemRepository cartItemRepository;
 
-    @Mock
-    private ItemMapper itemMapper;
+  @Mock private ItemMapper itemMapper;
 
-    @InjectMocks
-    private ItemServiceImpl itemService;
+  @InjectMocks private ItemServiceImpl itemService;
 
-    @Test
-    void shouldReturnItem() {
-        Item item = TestData.item();
-        ItemDto dto = TestData.itemDto();
-        CartItem cartItem = TestData.cartItem();
-        when(itemRepository.findById(1L))
-            .thenReturn(Optional.of(item));
-        when(itemMapper.toDto(item))
-            .thenReturn(dto);
-        when(cartItemRepository.findByItemId(1L))
-            .thenReturn(Optional.of(cartItem));
-        ItemDto actual = itemService.getItem(1L);
-        assertThat(actual.count())
-            .isEqualTo(cartItem.getCount());
-    }
+  @Test
+  void shouldReturnItem() {
+    Item item = TestData.item();
+    ItemDto dto = TestData.itemDto();
+    CartItem cartItem = TestData.cartItem();
+    when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
+    when(itemMapper.toDto(item)).thenReturn(dto);
+    when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+    ItemDto actual = itemService.getItem(1L);
+    assertThat(actual.count()).isEqualTo(cartItem.getCount());
+  }
 
-    @Test
-    void shouldThrowWhenItemNotFound() {
+  @Test
+  void shouldThrowWhenItemNotFound() {
 
-        when(itemRepository.findById(1L))
-            .thenReturn(Optional.empty());
+    when(itemRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> itemService.getItem(1L))
-            .isInstanceOf(ItemNotFoundException.class);
-    }
+    assertThatThrownBy(() -> itemService.getItem(1L)).isInstanceOf(ItemNotFoundException.class);
+  }
 
-    @Test
-    void shouldReturnItemsWithPlaceholders() {
+  @Test
+  void shouldReturnItemsWithPlaceholders() {
 
-        Item item = TestData.item();
+    Item item = TestData.item();
 
-        ItemDto dto = TestData.itemDto();
+    ItemDto dto = TestData.itemDto();
 
-        Page<Item> page = new PageImpl<>(
-            List.of(item)
-        );
+    Page<Item> page = new PageImpl<>(List.of(item));
 
-        when(itemRepository
-            .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                anyString(),
-                anyString(),
-                any(Pageable.class)
-            ))
-            .thenReturn(page);
+    when(itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            anyString(), anyString(), any(Pageable.class)))
+        .thenReturn(page);
 
-        when(itemMapper.toDto(item))
-            .thenReturn(dto);
+    when(itemMapper.toDto(item)).thenReturn(dto);
 
-        when(cartItemRepository.findAllByItemIdIn(any()))
-            .thenReturn(Collections.emptyList());
+    when(cartItemRepository.findAllByItemIdIn(any())).thenReturn(Collections.emptyList());
 
-        List<List<ItemDto>> result = itemService.getItems(
-            "",
-            SortType.NO,
-            1,
-            5
-        );
+    List<List<ItemDto>> result = itemService.getItems("", SortType.NO, 1, 5);
 
-        assertThat(result)
-            .hasSize(1);
+    assertThat(result).hasSize(1);
 
-        assertThat(result.getFirst())
-            .hasSize(3);
+    assertThat(result.getFirst()).hasSize(3);
 
-        assertThat(result.getFirst().get(1).id())
-            .isEqualTo(-1L);
-    }
+    assertThat(result.getFirst().get(1).id()).isEqualTo(-1L);
+  }
 
-    @Test
-    void shouldReturnPaging() {
+  @Test
+  void shouldReturnPaging() {
 
-        Page<Item> page = new PageImpl<>(
-            List.of(TestData.item())
-        );
+    Page<Item> page = new PageImpl<>(List.of(TestData.item()));
 
-        when(itemRepository
-            .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                anyString(),
-                anyString(),
-                any(Pageable.class)
-            ))
-            .thenReturn(page);
+    when(itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            anyString(), anyString(), any(Pageable.class)))
+        .thenReturn(page);
 
-        PagingDto paging = itemService.getPaging(
-            "",
-            SortType.NO,
-            1,
-            5
-        );
+    PagingDto paging = itemService.getPaging("", SortType.NO, 1, 5);
 
-        assertThat(paging.pageNumber())
-            .isEqualTo(1);
+    assertThat(paging.pageNumber()).isEqualTo(1);
 
-        assertThat(paging.pageSize())
-            .isEqualTo(5);
-    }
+    assertThat(paging.pageSize()).isEqualTo(5);
+  }
 }

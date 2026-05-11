@@ -7,10 +7,9 @@ import ru.yandex.practicum.mymarket.enums.Action;
 
 public interface CartService {
 
-    List<CartItemDto> getCartItems();
+  List<CartItemDto> getCartItems();
 
-    void changeCount(Long itemId, Action action);
+  void changeCount(Long itemId, Action action);
 
-    BigDecimal getTotal();
-
+  BigDecimal getTotal();
 }

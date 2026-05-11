@@ -6,5 +6,5 @@ import ru.yandex.practicum.mymarket.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    List<Order> findAllByOrderByIdDesc();
+  List<Order> findAllByOrderByIdDesc();
 }

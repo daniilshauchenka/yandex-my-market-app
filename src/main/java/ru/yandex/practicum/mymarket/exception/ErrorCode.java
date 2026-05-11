@@ -6,16 +6,15 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
+  ITEM_NOT_FOUND("error.item.not-found"),
 
-    ITEM_NOT_FOUND("error.item.not-found"),
+  ORDER_NOT_FOUND("error.order.not-found"),
 
-    ORDER_NOT_FOUND("error.order.not-found"),
+  VALIDATION_ERROR("error.validation"),
 
-    VALIDATION_ERROR("error.validation"),
+  INVALID_PAGE_SIZE("error.invalid-page-size"),
 
-    INVALID_PAGE_SIZE("error.invalid-page-size"),
+  INTERNAL_ERROR("error.internal");
 
-    INTERNAL_ERROR("error.internal");
-
-    private final String messageKey;
+  private final String messageKey;
 }

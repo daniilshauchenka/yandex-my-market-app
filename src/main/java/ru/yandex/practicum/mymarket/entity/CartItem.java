@@ -20,12 +20,8 @@ import lombok.Setter;
 @Table(
     name = "cart_items",
     uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_cart_items_item_id",
-            columnNames = "item_id"
-        )
-    }
-)
+      @UniqueConstraint(name = "uk_cart_items_item_id", columnNames = "item_id")
+    })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,14 +29,14 @@ import lombok.Setter;
 @Builder
 public class CartItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "item_id")
-    private Item item;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "item_id")
+  private Item item;
 
-    @Column(nullable = false)
-    private Integer count;
+  @Column(nullable = false)
+  private Integer count;
 }

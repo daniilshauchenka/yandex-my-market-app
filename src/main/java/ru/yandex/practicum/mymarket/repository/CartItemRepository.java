@@ -7,11 +7,11 @@ import ru.yandex.practicum.mymarket.entity.CartItem;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    Optional<CartItem> findByItemId(Long itemId);
+  Optional<CartItem> findByItemId(Long itemId);
 
-    List<CartItem> findAllByOrderByIdAsc();
+  List<CartItem> findAllByOrderByIdAsc();
 
-    void deleteByItemId(Long itemId);
+  void deleteByItemId(Long itemId);
 
-    List<CartItem> findAllByItemIdIn(List<Long> itemIds);
+  List<CartItem> findAllByItemIdIn(List<Long> itemIds);
 }

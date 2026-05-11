@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public class MarketException extends RuntimeException {
 
-    private final ErrorCode errorCode;
+  private final ErrorCode errorCode;
 
-    public MarketException(ErrorCode errorCode) {
-        this.errorCode = errorCode;
-    }
+  public MarketException(ErrorCode errorCode) {
+    this.errorCode = errorCode;
+  }
 }

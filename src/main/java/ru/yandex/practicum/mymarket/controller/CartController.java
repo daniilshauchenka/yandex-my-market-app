@@ -18,27 +18,24 @@ import ru.yandex.practicum.mymarket.service.CartService;
 @Validated
 public class CartController {
 
-    private final CartService cartService;
+  private final CartService cartService;
 
-    @GetMapping
-    public String cart(Model model) {
-        fillCartModel(model);
-        return "cart";
-    }
+  @GetMapping
+  public String cart(Model model) {
+    fillCartModel(model);
+    return "cart";
+  }
 
-    @PostMapping
-    public String changeCartItem(
-        @RequestParam @Positive Long id,
-        @RequestParam Action action,
-        Model model
-    ) {
-        cartService.changeCount(id, action);
-        fillCartModel(model);
-        return "cart";
-    }
+  @PostMapping
+  public String changeCartItem(
+      @RequestParam @Positive Long id, @RequestParam Action action, Model model) {
+    cartService.changeCount(id, action);
+    fillCartModel(model);
+    return "cart";
+  }
 
-    private void fillCartModel(Model model) {
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
-    }
+  private void fillCartModel(Model model) {
+    model.addAttribute("items", cartService.getCartItems());
+    model.addAttribute("total", cartService.getTotal());
+  }
 }

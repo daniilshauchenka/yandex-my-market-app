@@ -28,200 +28,120 @@ import ru.yandex.practicum.mymarket.service.ItemService;
 @Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
 
-    private static final int ITEMS_PER_ROW = 3;
-    private static final String EMPTY_SEARCH = "";
+  private static final int ITEMS_PER_ROW = 3;
+  private static final String EMPTY_SEARCH = "";
 
-    private final ItemRepository itemRepository;
-    private final CartItemRepository cartItemRepository;
-    private final ItemMapper itemMapper;
+  private final ItemRepository itemRepository;
+  private final CartItemRepository cartItemRepository;
+  private final ItemMapper itemMapper;
 
-    @Override
-    public List<List<ItemDto>> getItems(
-        String search,
-        SortType sortType,
-        int pageNumber,
-        int pageSize
-    ) {
+  @Override
+  public List<List<ItemDto>> getItems(
+      String search, SortType sortType, int pageNumber, int pageSize) {
 
-        Page<Item> page = getPage(
-            search,
-            sortType,
-            pageNumber,
-            pageSize
-        );
+    Page<Item> page = getPage(search, sortType, pageNumber, pageSize);
 
-        List<ItemDto> items = enrich(
-            page.getContent()
-        );
+    List<ItemDto> items = enrich(page.getContent());
 
-        return splitByRows(items);
+    return splitByRows(items);
+  }
+
+  @Override
+  public PagingDto getPaging(String search, SortType sortType, int pageNumber, int pageSize) {
+
+    Page<Item> page = getPage(search, sortType, pageNumber, pageSize);
+
+    return new PagingDto(pageSize, pageNumber, page.hasPrevious(), page.hasNext());
+  }
+
+  @Override
+  public ItemDto getItem(Long id) {
+
+    Item item = itemRepository.findById(id).orElseThrow(ItemNotFoundException::new);
+
+    return enrich(item);
+  }
+
+  private Page<Item> getPage(String search, SortType sortType, int pageNumber, int pageSize) {
+
+    Pageable pageable = buildPageable(pageNumber, pageSize, sortType);
+
+    String normalizedSearch = normalizeSearch(search);
+
+    return itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+        normalizedSearch, normalizedSearch, pageable);
+  }
+
+  private Pageable buildPageable(int pageNumber, int pageSize, SortType sortType) {
+
+    return PageRequest.of(Math.max(pageNumber - 1, 0), pageSize, sortType.getSort());
+  }
+
+  private String normalizeSearch(String search) {
+
+    if (search == null || search.isBlank()) {
+      return EMPTY_SEARCH;
     }
 
-    @Override
-    public PagingDto getPaging(
-        String search,
-        SortType sortType,
-        int pageNumber,
-        int pageSize
-    ) {
+    return search.trim();
+  }
 
-        Page<Item> page = getPage(
-            search,
-            sortType,
-            pageNumber,
-            pageSize
-        );
+  private List<List<ItemDto>> splitByRows(List<ItemDto> items) {
 
-        return new PagingDto(
-            pageSize,
-            pageNumber,
-            page.hasPrevious(),
-            page.hasNext()
-        );
+    List<List<ItemDto>> rows = new ArrayList<>();
+
+    for (int i = 0; i < items.size(); i += ITEMS_PER_ROW) {
+
+      List<ItemDto> row =
+          new ArrayList<>(items.subList(i, Math.min(i + ITEMS_PER_ROW, items.size())));
+
+      while (row.size() < ITEMS_PER_ROW) {
+        row.add(placeholder());
+      }
+
+      rows.add(row);
     }
 
-    @Override
-    public ItemDto getItem(Long id) {
+    return rows;
+  }
 
-        Item item = itemRepository.findById(id)
-            .orElseThrow(ItemNotFoundException::new);
+  private ItemDto placeholder() {
 
-        return enrich(item);
+    return new ItemDto(-1L, "", "", "", BigDecimal.ZERO, 0);
+  }
+
+  private ItemDto enrich(Item item) {
+
+    Integer count = cartItemRepository.findByItemId(item.getId()).map(CartItem::getCount).orElse(0);
+
+    ItemDto dto = itemMapper.toDto(item);
+
+    return new ItemDto(dto.id(), dto.title(), dto.description(), dto.imgPath(), dto.price(), count);
+  }
+
+  private List<ItemDto> enrich(List<Item> items) {
+    if (items.isEmpty()) {
+      return Collections.emptyList();
     }
+    List<Long> itemIds = items.stream().map(Item::getId).toList();
 
-    private Page<Item> getPage(
-        String search,
-        SortType sortType,
-        int pageNumber,
-        int pageSize
-    ) {
+    Map<Long, Integer> counts =
+        cartItemRepository.findAllByItemIdIn(itemIds).stream()
+            .collect(Collectors.toMap(cartItem -> cartItem.getItem().getId(), CartItem::getCount));
 
-        Pageable pageable = buildPageable(
-            pageNumber,
-            pageSize,
-            sortType
-        );
+    return items.stream()
+        .map(
+            item -> {
+              ItemDto dto = itemMapper.toDto(item);
 
-        String normalizedSearch = normalizeSearch(search);
-
-        return itemRepository
-            .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                normalizedSearch,
-                normalizedSearch,
-                pageable
-            );
-    }
-
-    private Pageable buildPageable(
-        int pageNumber,
-        int pageSize,
-        SortType sortType
-    ) {
-
-        return PageRequest.of(
-            Math.max(pageNumber - 1, 0),
-            pageSize,
-            sortType.getSort()
-        );
-    }
-
-    private String normalizeSearch(String search) {
-
-        if (search == null || search.isBlank()) {
-            return EMPTY_SEARCH;
-        }
-
-        return search.trim();
-    }
-
-    private List<List<ItemDto>> splitByRows(
-        List<ItemDto> items
-    ) {
-
-        List<List<ItemDto>> rows = new ArrayList<>();
-
-        for (int i = 0; i < items.size(); i += ITEMS_PER_ROW) {
-
-            List<ItemDto> row = new ArrayList<>(
-                items.subList(
-                    i,
-                    Math.min(
-                        i + ITEMS_PER_ROW,
-                        items.size()
-                    )
-                )
-            );
-
-            while (row.size() < ITEMS_PER_ROW) {
-                row.add(placeholder());
-            }
-
-            rows.add(row);
-        }
-
-        return rows;
-    }
-
-    private ItemDto placeholder() {
-
-        return new ItemDto(
-            -1L,
-            "",
-            "",
-            "",
-            BigDecimal.ZERO,
-            0
-        );
-    }
-
-    private ItemDto enrich(Item item) {
-
-        Integer count = cartItemRepository.findByItemId(item.getId())
-            .map(CartItem::getCount)
-            .orElse(0);
-
-        ItemDto dto = itemMapper.toDto(item);
-
-        return new ItemDto(
-            dto.id(),
-            dto.title(),
-            dto.description(),
-            dto.imgPath(),
-            dto.price(),
-            count
-        );
-    }
-
-    private List<ItemDto> enrich(List<Item> items) {
-        if (items.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Long> itemIds = items.stream()
-            .map(Item::getId)
-            .toList();
-
-        Map<Long, Integer> counts = cartItemRepository
-            .findAllByItemIdIn(itemIds)
-            .stream()
-            .collect(Collectors.toMap(
-                cartItem -> cartItem.getItem().getId(),
-                CartItem::getCount
-            ));
-
-        return items.stream()
-            .map(item -> {
-
-                ItemDto dto = itemMapper.toDto(item);
-
-                return new ItemDto(
-                    dto.id(),
-                    dto.title(),
-                    dto.description(),
-                    dto.imgPath(),
-                    dto.price(),
-                    counts.getOrDefault(item.getId(), 0)
-                );
+              return new ItemDto(
+                  dto.id(),
+                  dto.title(),
+                  dto.description(),
+                  dto.imgPath(),
+                  dto.price(),
+                  counts.getOrDefault(item.getId(), 0));
             })
-            .toList();
-    }
+        .toList();
+  }
 }

@@ -13,28 +13,25 @@ import ru.yandex.practicum.mymarket.service.OrderService;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderService orderService;
+  private final OrderService orderService;
 
-    @GetMapping("/orders")
-    public String orders(Model model) {
-        model.addAttribute("orders", orderService.getOrders());
-        return "orders";
-    }
+  @GetMapping("/orders")
+  public String orders(Model model) {
+    model.addAttribute("orders", orderService.getOrders());
+    return "orders";
+  }
 
-    @GetMapping("/orders/{id}")
-    public String order(
-        @PathVariable Long id,
-        @RequestParam(defaultValue = "false") boolean newOrder,
-        Model model
-    ) {
-        model.addAttribute("order", orderService.getOrder(id));
-        model.addAttribute("newOrder", newOrder);
-        return "order";
-    }
+  @GetMapping("/orders/{id}")
+  public String order(
+      @PathVariable Long id, @RequestParam(defaultValue = "false") boolean newOrder, Model model) {
+    model.addAttribute("order", orderService.getOrder(id));
+    model.addAttribute("newOrder", newOrder);
+    return "order";
+  }
 
-    @PostMapping("/buy")
-    public String buy() {
-        Long orderId = orderService.buy();
-        return "redirect:/orders/" + orderId + "?newOrder=true";
-    }
+  @PostMapping("/buy")
+  public String buy() {
+    Long orderId = orderService.buy();
+    return "redirect:/orders/" + orderId + "?newOrder=true";
+  }
 }

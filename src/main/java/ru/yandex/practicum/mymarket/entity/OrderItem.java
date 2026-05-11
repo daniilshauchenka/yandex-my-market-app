@@ -25,24 +25,23 @@ import lombok.Setter;
 @Builder
 public class OrderItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    private Order order;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "order_id")
+  private Order order;
 
-    @Column(nullable = false)
-    private String title;
+  @Column(nullable = false)
+  private String title;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal price;
+  @Column(nullable = false, precision = 19, scale = 2)
+  private BigDecimal price;
 
-    @Column(nullable = false)
-    private Integer count;
+  @Column(nullable = false)
+  private Integer count;
 
-    @Column(name = "item_id", nullable = false)
-    private Long itemId;
-
+  @Column(name = "item_id", nullable = false)
+  private Long itemId;
 }

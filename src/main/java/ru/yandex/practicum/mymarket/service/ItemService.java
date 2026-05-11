@@ -7,19 +7,9 @@ import ru.yandex.practicum.mymarket.enums.SortType;
 
 public interface ItemService {
 
-    List<List<ItemDto>> getItems(
-        String search,
-        SortType sortType,
-        int pageNumber,
-        int pageSize
-    );
+  List<List<ItemDto>> getItems(String search, SortType sortType, int pageNumber, int pageSize);
 
-    PagingDto getPaging(
-        String search,
-        SortType sortType,
-        int pageNumber,
-        int pageSize
-    );
+  PagingDto getPaging(String search, SortType sortType, int pageNumber, int pageSize);
 
-    ItemDto getItem(Long id);
+  ItemDto getItem(Long id);
 }

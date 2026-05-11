@@ -21,50 +21,51 @@ import ru.yandex.practicum.mymarket.service.OrderService;
 @Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderRepository orderRepository;
-    private final CartItemRepository cartItemRepository;
-    private final OrderMapper orderMapper;
+  private final OrderRepository orderRepository;
+  private final CartItemRepository cartItemRepository;
+  private final OrderMapper orderMapper;
 
-    @Override
-    public List<OrderDto> getOrders() {
-        return orderMapper.toDtoList(orderRepository.findAllByOrderByIdDesc());
+  @Override
+  public List<OrderDto> getOrders() {
+    return orderMapper.toDtoList(orderRepository.findAllByOrderByIdDesc());
+  }
+
+  @Override
+  public OrderDto getOrder(Long id) {
+    Order order = orderRepository.findById(id).orElseThrow(OrderNotFoundException::new);
+    return orderMapper.toDto(order);
+  }
+
+  @Override
+  @Transactional
+  public Long buy() {
+    List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
+
+    if (cartItems.isEmpty()) {
+      throw new EmptyCartException();
     }
-
-    @Override
-    public OrderDto getOrder(Long id) {
-        Order order = orderRepository.findById(id)
-            .orElseThrow(OrderNotFoundException::new);
-        return orderMapper.toDto(order);
-    }
-
-    @Override
-    @Transactional
-    public Long buy() {
-        List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
-
-        if (cartItems.isEmpty()) {
-            throw new EmptyCartException();
-        }
-        BigDecimal totalSum = cartItems.stream()
-            .map(cartItem -> cartItem.getItem()
-                .getPrice()
-                .multiply(BigDecimal.valueOf(cartItem.getCount())))
+    BigDecimal totalSum =
+        cartItems.stream()
+            .map(
+                cartItem ->
+                    cartItem.getItem().getPrice().multiply(BigDecimal.valueOf(cartItem.getCount())))
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        Order order = Order.builder()
-            .totalSum(totalSum)
-            .build();
-        List<OrderItem> orderItems = cartItems.stream()
-            .map(cartItem -> OrderItem.builder()
-                .order(order)
-                .title(cartItem.getItem().getTitle())
-                .price(cartItem.getItem().getPrice())
-                .count(cartItem.getCount())
-                .itemId(cartItem.getItem().getId())
-                .build())
+    Order order = Order.builder().totalSum(totalSum).build();
+    List<OrderItem> orderItems =
+        cartItems.stream()
+            .map(
+                cartItem ->
+                    OrderItem.builder()
+                        .order(order)
+                        .title(cartItem.getItem().getTitle())
+                        .price(cartItem.getItem().getPrice())
+                        .count(cartItem.getCount())
+                        .itemId(cartItem.getItem().getId())
+                        .build())
             .toList();
-        order.getItems().addAll(orderItems);
-        Order savedOrder = orderRepository.save(order);
-        cartItemRepository.deleteAllInBatch(cartItems);
-        return savedOrder.getId();
-    }
+    order.getItems().addAll(orderItems);
+    Order savedOrder = orderRepository.save(order);
+    cartItemRepository.deleteAllInBatch(cartItems);
+    return savedOrder.getId();
+  }
 }

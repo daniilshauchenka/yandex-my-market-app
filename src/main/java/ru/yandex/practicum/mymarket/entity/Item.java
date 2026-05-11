@@ -1,6 +1,5 @@
 package ru.yandex.practicum.mymarket.entity;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,19 +22,19 @@ import lombok.Setter;
 @Builder
 public class Item {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String title;
+  @Column(nullable = false)
+  private String title;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+  @Column(columnDefinition = "TEXT")
+  private String description;
 
-    @Column(name = "img_path")
-    private String imgPath;
+  @Column(name = "img_path")
+  private String imgPath;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal price;
+  @Column(nullable = false, precision = 19, scale = 2)
+  private BigDecimal price;
 }

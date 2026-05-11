@@ -20,82 +20,72 @@ import ru.yandex.practicum.mymarket.service.CartService;
 @Transactional(readOnly = true)
 public class CartServiceImpl implements CartService {
 
-    private static final int INITIAL_COUNT = 1;
-    private static final int MIN_COUNT = 1;
+  private static final int INITIAL_COUNT = 1;
+  private static final int MIN_COUNT = 1;
 
-    private final CartItemRepository cartItemRepository;
-    private final ItemRepository itemRepository;
-    private final CartItemMapper cartItemMapper;
+  private final CartItemRepository cartItemRepository;
+  private final ItemRepository itemRepository;
+  private final CartItemMapper cartItemMapper;
 
-    @Override
-    public List<CartItemDto> getCartItems() {
-        List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
-        return cartItemMapper.toDtoList(cartItems);
+  @Override
+  public List<CartItemDto> getCartItems() {
+    List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
+    return cartItemMapper.toDtoList(cartItems);
+  }
+
+  @Override
+  public BigDecimal getTotal() {
+    return cartItemRepository.findAll().stream()
+        .map(this::calculateItemTotal)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  @Override
+  @Transactional
+  public void changeCount(Long itemId, Action action) {
+    CartItem cartItem = cartItemRepository.findByItemId(itemId).orElse(null);
+
+    if (cartItem == null) {
+      if (action != Action.PLUS) {
+        return;
+      }
+      createCartItem(itemId);
+      return;
     }
 
-    @Override
-    public BigDecimal getTotal() {
-        return cartItemRepository.findAll()
-            .stream()
-            .map(this::calculateItemTotal)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    switch (action) {
+      case PLUS -> increase(cartItem);
+      case MINUS -> decrease(cartItem);
+      case DELETE -> delete(cartItem);
     }
+  }
 
-    @Override
-    @Transactional
-    public void changeCount(Long itemId, Action action) {
-        CartItem cartItem = cartItemRepository.findByItemId(itemId).orElse(null);
+  private void createCartItem(Long itemId) {
+    Item item = itemRepository.findById(itemId).orElseThrow(ItemNotFoundException::new);
+    CartItem cartItem = CartItem.builder().item(item).count(INITIAL_COUNT).build();
+    cartItemRepository.save(cartItem);
+  }
 
-        if (cartItem == null) {
-            if (action != Action.PLUS) {
-                return;
-            }
-            createCartItem(itemId);
-            return;
-        }
+  private void increase(CartItem cartItem) {
+    cartItem.setCount(cartItem.getCount() + 1);
+    cartItemRepository.save(cartItem);
+  }
 
-        switch (action) {
-            case PLUS -> increase(cartItem);
-            case MINUS -> decrease(cartItem);
-            case DELETE -> delete(cartItem);
-        }
+  private void decrease(CartItem cartItem) {
+    int newCount = cartItem.getCount() - 1;
+    if (newCount < MIN_COUNT) {
+      cartItemRepository.delete(cartItem);
+      return;
     }
+    cartItem.setCount(newCount);
+    cartItemRepository.save(cartItem);
+  }
 
-    private void createCartItem(Long itemId) {
-        Item item = itemRepository.findById(itemId).orElseThrow(ItemNotFoundException::new);
-        CartItem cartItem = CartItem.builder()
-            .item(item)
-            .count(INITIAL_COUNT)
-            .build();
-        cartItemRepository.save(cartItem);
-    }
+  private void delete(CartItem cartItem) {
+    cartItemRepository.delete(cartItem);
+  }
 
-    private void increase(CartItem cartItem) {
-        cartItem.setCount(cartItem.getCount() + 1);
-        cartItemRepository.save(cartItem);
-    }
-
-    private void decrease(CartItem cartItem) {
-        int newCount = cartItem.getCount() - 1;
-        if (newCount < MIN_COUNT) {
-            cartItemRepository.delete(cartItem);
-            return;
-        }
-        cartItem.setCount(newCount);
-        cartItemRepository.save(cartItem);
-    }
-
-    private void delete(CartItem cartItem) {
-        cartItemRepository.delete(cartItem);
-    }
-
-    private BigDecimal calculateItemTotal(CartItem cartItem) {
-        return cartItem.getItem()
-            .getPrice()
-            .multiply(
-                BigDecimal.valueOf(
-                    cartItem.getCount()
-                )
-            );
-    }
+  private BigDecimal calculateItemTotal(CartItem cartItem) {
+    return cartItem.getItem().getPrice().multiply(BigDecimal.valueOf(cartItem.getCount()));
+  }
 }
