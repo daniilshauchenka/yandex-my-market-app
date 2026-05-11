@@ -63,8 +63,13 @@ public class ItemController {
     }
 
     @PostMapping("/items/{id}")
-    public String changeFromItem(@PathVariable Long id, @RequestParam Action action) {
+    public String changeFromItem(
+        @PathVariable Long id,
+        @RequestParam Action action,
+        Model model
+    ) {
         cartService.changeCount(id, action);
-        return "redirect:/items/" + id;
+        model.addAttribute("item", itemService.getItem(id));
+        return "item";
     }
 }

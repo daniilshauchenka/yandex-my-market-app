@@ -9,9 +9,12 @@ import ru.yandex.practicum.mymarket.entity.OrderItem;
 @Mapper(config = GlobalMapperConfig.class)
 public interface OrderItemMapper {
 
-    default ItemDto toItemDto(OrderItem orderItem) {
+    default ItemDto toItemDto(
+        OrderItem orderItem
+    ) {
+
         return new ItemDto(
-            orderItem.getId(),
+            orderItem.getItemId(),
             orderItem.getTitle(),
             null,
             null,
@@ -20,5 +23,7 @@ public interface OrderItemMapper {
         );
     }
 
-    List<ItemDto> toItemDtoList(List<OrderItem> orderItems);
+    List<ItemDto> toItemDtoList(
+        List<OrderItem> orderItems
+    );
 }

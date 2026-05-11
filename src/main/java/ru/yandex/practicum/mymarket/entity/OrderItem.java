@@ -41,4 +41,8 @@ public class OrderItem {
 
     @Column(nullable = false)
     private Integer count;
+
+    @Column(name = "item_id", nullable = false)
+    private Long itemId;
+
 }

@@ -25,7 +25,6 @@ public class CartServiceImpl implements CartService {
 
     private final CartItemRepository cartItemRepository;
     private final ItemRepository itemRepository;
-
     private final CartItemMapper cartItemMapper;
 
     @Override
@@ -60,12 +59,6 @@ public class CartServiceImpl implements CartService {
             case MINUS -> decrease(cartItem);
             case DELETE -> delete(cartItem);
         }
-    }
-
-    @Override
-    @Transactional
-    public void clearCart() {
-        cartItemRepository.deleteAllInBatch();
     }
 
     private void createCartItem(Long itemId) {

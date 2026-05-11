@@ -13,5 +13,4 @@ public interface CartService {
 
     BigDecimal getTotal();
 
-    void clearCart();
 }

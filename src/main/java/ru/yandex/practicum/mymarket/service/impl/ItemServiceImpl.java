@@ -1,6 +1,8 @@
 package ru.yandex.practicum.mymarket.service.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ public class ItemServiceImpl implements ItemService {
     private static final String EMPTY_SEARCH = "";
 
     private final ItemRepository itemRepository;
+    private final CartItemRepository cartItemRepository;
     private final ItemMapper itemMapper;
 
     @Override
@@ -40,15 +43,17 @@ public class ItemServiceImpl implements ItemService {
         int pageSize
     ) {
 
-        String normalizedSearch = normalizeSearch(search);
-        Pageable pageable = buildPageable(pageNumber, pageSize, sortType);
-
-        Page<Item> page = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-            normalizedSearch,
-            normalizedSearch,
-            pageable
+        Page<Item> page = getPage(
+            search,
+            sortType,
+            pageNumber,
+            pageSize
         );
-        List<ItemDto> items = itemMapper.toDtoList(page.getContent());
+
+        List<ItemDto> items = enrich(
+            page.getContent()
+        );
+
         return splitByRows(items);
     }
 
@@ -59,53 +64,29 @@ public class ItemServiceImpl implements ItemService {
         int pageNumber,
         int pageSize
     ) {
-        String normalizedSearch = normalizeSearch(search);
-        Pageable pageable = buildPageable(pageNumber, pageSize, sortType);
 
-        Page<Item> page = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-            normalizedSearch,
-            normalizedSearch,
-            pageable
+        Page<Item> page = getPage(
+            search,
+            sortType,
+            pageNumber,
+            pageSize
         );
 
-        return new PagingDto(pageSize, pageNumber, page.hasPrevious(), page.hasNext());
+        return new PagingDto(
+            pageSize,
+            pageNumber,
+            page.hasPrevious(),
+            page.hasNext()
+        );
     }
 
     @Override
     public ItemDto getItem(Long id) {
-        Item item = itemRepository.findById(id).orElseThrow(ItemNotFoundException::new);
-        return itemMapper.toDto(item);
-    }
 
-    private Pageable buildPageable(
-        int pageNumber,
-        int pageSize,
-        SortType sortType
-    ) {
-        return PageRequest.of(Math.max(pageNumber - 1, 0), pageSize, sortType.getSort());
-    }
+        Item item = itemRepository.findById(id)
+            .orElseThrow(ItemNotFoundException::new);
 
-    private String normalizeSearch(String search) {
-        if (search == null || search.isBlank()) {
-            return EMPTY_SEARCH;
-        }
-        return search.trim();
-    }
-
-    private List<List<ItemDto>> splitByRows(
-        List<ItemDto> items
-    ) {
-        List<List<ItemDto>> rows = new ArrayList<>();
-        for (int i = 0; i < items.size(); i += ITEMS_PER_ROW) {
-            int endIndex = Math.min(
-                i + ITEMS_PER_ROW,
-                items.size()
-            );
-            rows.add(
-                items.subList(i, endIndex)
-            );
-        }
-        return rows;
+        return enrich(item);
     }
 
     private Page<Item> getPage(
@@ -121,11 +102,126 @@ public class ItemServiceImpl implements ItemService {
             sortType
         );
 
+        String normalizedSearch = normalizeSearch(search);
+
         return itemRepository
             .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                normalizeSearch(search),
-                normalizeSearch(search),
+                normalizedSearch,
+                normalizedSearch,
                 pageable
             );
+    }
+
+    private Pageable buildPageable(
+        int pageNumber,
+        int pageSize,
+        SortType sortType
+    ) {
+
+        return PageRequest.of(
+            Math.max(pageNumber - 1, 0),
+            pageSize,
+            sortType.getSort()
+        );
+    }
+
+    private String normalizeSearch(String search) {
+
+        if (search == null || search.isBlank()) {
+            return EMPTY_SEARCH;
+        }
+
+        return search.trim();
+    }
+
+    private List<List<ItemDto>> splitByRows(
+        List<ItemDto> items
+    ) {
+
+        List<List<ItemDto>> rows = new ArrayList<>();
+
+        for (int i = 0; i < items.size(); i += ITEMS_PER_ROW) {
+
+            List<ItemDto> row = new ArrayList<>(
+                items.subList(
+                    i,
+                    Math.min(
+                        i + ITEMS_PER_ROW,
+                        items.size()
+                    )
+                )
+            );
+
+            while (row.size() < ITEMS_PER_ROW) {
+                row.add(placeholder());
+            }
+
+            rows.add(row);
+        }
+
+        return rows;
+    }
+
+    private ItemDto placeholder() {
+
+        return new ItemDto(
+            -1L,
+            "",
+            "",
+            "",
+            BigDecimal.ZERO,
+            0
+        );
+    }
+
+    private ItemDto enrich(Item item) {
+
+        Integer count = cartItemRepository.findByItemId(item.getId())
+            .map(CartItem::getCount)
+            .orElse(0);
+
+        ItemDto dto = itemMapper.toDto(item);
+
+        return new ItemDto(
+            dto.id(),
+            dto.title(),
+            dto.description(),
+            dto.imgPath(),
+            dto.price(),
+            count
+        );
+    }
+
+    private List<ItemDto> enrich(List<Item> items) {
+        if (items.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> itemIds = items.stream()
+            .map(Item::getId)
+            .toList();
+
+        Map<Long, Integer> counts = cartItemRepository
+            .findAllByItemIdIn(itemIds)
+            .stream()
+            .collect(Collectors.toMap(
+                cartItem -> cartItem.getItem().getId(),
+                CartItem::getCount
+            ));
+
+        return items.stream()
+            .map(item -> {
+
+                ItemDto dto = itemMapper.toDto(item);
+
+                return new ItemDto(
+                    dto.id(),
+                    dto.title(),
+                    dto.description(),
+                    dto.imgPath(),
+                    dto.price(),
+                    counts.getOrDefault(item.getId(), 0)
+                );
+            })
+            .toList();
     }
 }
