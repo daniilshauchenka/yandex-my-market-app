@@ -41,6 +41,30 @@ public class GlobalExceptionHandler {
         return "error";
     }
 
+    @ExceptionHandler({
+        ItemNotFoundException.class,
+        OrderNotFoundException.class
+    })
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNotFoundException(
+        MarketException ex,
+        Locale locale,
+        Model model
+    ) {
+
+        log.warn("Not found exception occurred. errorCode={}", ex.getErrorCode());
+
+        String message = messageSource.getMessage(
+            ex.getErrorCode().getMessageKey(),
+            null,
+            locale
+        );
+
+        model.addAttribute("message", message);
+
+        return "error";
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleConstraintViolationException(
