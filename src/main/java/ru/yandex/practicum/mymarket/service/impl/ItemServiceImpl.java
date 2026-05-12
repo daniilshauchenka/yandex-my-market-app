@@ -30,6 +30,11 @@ public class ItemServiceImpl implements ItemService {
 
   private static final int ITEMS_PER_ROW = 3;
   private static final String EMPTY_SEARCH = "";
+  private static final Long PLACEHOLDER_ID = -1L;
+  private static final BigDecimal PLACEHOLDER_PRICE = BigDecimal.ZERO;
+  private static final Integer PLACEHOLDER_COUNT = 0;
+
+  private static final String EMPTY = "";
 
   private final ItemRepository itemRepository;
   private final CartItemRepository cartItemRepository;
@@ -101,22 +106,17 @@ public class ItemServiceImpl implements ItemService {
 
       rows.add(row);
     }
-
     return rows;
   }
 
   private ItemDto placeholder() {
 
-    return new ItemDto(-1L, "", "", "", BigDecimal.ZERO, 0);
+    return new ItemDto(PLACEHOLDER_ID, EMPTY, EMPTY, EMPTY, PLACEHOLDER_PRICE, PLACEHOLDER_COUNT);
   }
 
   private ItemDto enrich(Item item) {
-
     Integer count = cartItemRepository.findByItemId(item.getId()).map(CartItem::getCount).orElse(0);
-
-    ItemDto dto = itemMapper.toDto(item);
-
-    return new ItemDto(dto.id(), dto.title(), dto.description(), dto.imgPath(), dto.price(), count);
+    return itemMapper.toDto(item, count);
   }
 
   private List<ItemDto> enrich(List<Item> items) {
@@ -124,24 +124,11 @@ public class ItemServiceImpl implements ItemService {
       return Collections.emptyList();
     }
     List<Long> itemIds = items.stream().map(Item::getId).toList();
-
     Map<Long, Integer> counts =
         cartItemRepository.findAllByItemIdIn(itemIds).stream()
             .collect(Collectors.toMap(cartItem -> cartItem.getItem().getId(), CartItem::getCount));
-
     return items.stream()
-        .map(
-            item -> {
-              ItemDto dto = itemMapper.toDto(item);
-
-              return new ItemDto(
-                  dto.id(),
-                  dto.title(),
-                  dto.description(),
-                  dto.imgPath(),
-                  dto.price(),
-                  counts.getOrDefault(item.getId(), 0));
-            })
+        .map(item -> itemMapper.toDto(item, counts.getOrDefault(item.getId(), 0)))
         .toList();
   }
 }

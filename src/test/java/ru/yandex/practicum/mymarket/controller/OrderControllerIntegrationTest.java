@@ -1,7 +1,8 @@
-package ru.yandex.practicum.mymarket.contoller;
+package ru.yandex.practicum.mymarket.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -44,7 +45,10 @@ class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
   @Test
   void shouldReturnOrdersPage() throws Exception {
-
-    mockMvc.perform(get("/orders")).andExpect(status().isOk()).andExpect(view().name("orders"));
+    mockMvc
+        .perform(get("/orders"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("orders"))
+        .andExpect(model().attributeExists("orders"));
   }
 }

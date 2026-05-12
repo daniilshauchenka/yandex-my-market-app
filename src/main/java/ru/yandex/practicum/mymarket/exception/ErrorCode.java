@@ -14,6 +14,8 @@ public enum ErrorCode {
 
   INVALID_PAGE_SIZE("error.invalid-page-size"),
 
+  EMPTY_CART("error.empty-cart"),
+
   INTERNAL_ERROR("error.internal");
 
   private final String messageKey;

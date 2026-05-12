@@ -40,17 +40,28 @@ class ItemServiceImplTest {
 
   @InjectMocks private ItemServiceImpl itemService;
 
-  @Test
-  void shouldReturnItem() {
-    Item item = TestData.item();
-    ItemDto dto = TestData.itemDto();
-    CartItem cartItem = TestData.cartItem();
-    when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-    when(itemMapper.toDto(item)).thenReturn(dto);
-    when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
-    ItemDto actual = itemService.getItem(1L);
-    assertThat(actual.count()).isEqualTo(cartItem.getCount());
-  }
+    @Test
+    void shouldReturnItem() {
+        Item item = TestData.item();
+        CartItem cartItem = TestData.cartItem();
+        ItemDto dto = new ItemDto(
+            item.getId(),
+            item.getTitle(),
+            item.getDescription(),
+            item.getImgPath(),
+            item.getPrice(),
+            cartItem.getCount()
+        );
+        when(itemRepository.findById(1L))
+            .thenReturn(Optional.of(item));
+        when(cartItemRepository.findByItemId(1L))
+            .thenReturn(Optional.of(cartItem));
+        when(itemMapper.toDto(item, cartItem.getCount()))
+            .thenReturn(dto);
+        ItemDto actual = itemService.getItem(1L);
+        assertThat(actual.count())
+            .isEqualTo(cartItem.getCount());
+    }
 
   @Test
   void shouldThrowWhenItemNotFound() {
@@ -73,7 +84,8 @@ class ItemServiceImplTest {
             anyString(), anyString(), any(Pageable.class)))
         .thenReturn(page);
 
-    when(itemMapper.toDto(item)).thenReturn(dto);
+      when(itemMapper.toDto(item, 0))
+          .thenReturn(dto);
 
     when(cartItemRepository.findAllByItemIdIn(any())).thenReturn(Collections.emptyList());
 

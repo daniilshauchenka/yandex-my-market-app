@@ -66,6 +66,6 @@ public class ItemController {
   public String changeFromItem(@PathVariable Long id, @RequestParam Action action, Model model) {
     cartService.changeCount(id, action);
     model.addAttribute("item", itemService.getItem(id));
-    return "item";
+    return "redirect:/items/" + id;
   }
 }

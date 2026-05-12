@@ -1,9 +1,9 @@
-package ru.yandex.practicum.mymarket.contoller;
+package ru.yandex.practicum.mymarket.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -14,43 +14,26 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.mymarket.util.AbstractIntegrationTest;
 
 @Transactional
-class ItemControllerIntegrationTest extends AbstractIntegrationTest {
-
+class CartControllerIntegrationTest extends AbstractIntegrationTest {
   @Autowired private MockMvc mockMvc;
 
   @Test
-  void shouldReturnItemsPage() throws Exception {
+  void shouldReturnCartPage() throws Exception {
 
     mockMvc
-        .perform(get("/items"))
+        .perform(get("/cart/items"))
         .andExpect(status().isOk())
-        .andExpect(view().name("items"))
+        .andExpect(view().name("cart"))
         .andExpect(model().attributeExists("items"))
-        .andExpect(model().attributeExists("paging"));
+        .andExpect(model().attributeExists("total"));
   }
 
   @Test
-  void shouldReturnItemPage() throws Exception {
+  void shouldChangeCartItem() throws Exception {
 
     mockMvc
-        .perform(get("/items/1"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("item"))
-        .andExpect(model().attributeExists("item"));
-  }
-
-  @Test
-  void shouldReturn404WhenItemNotFound() throws Exception {
-
-    mockMvc.perform(get("/items/999999")).andExpect(status().isNotFound());
-  }
-
-  @Test
-  void shouldAddItemToCart() throws Exception {
-
-    mockMvc
-        .perform(post("/items").param("id", "1").param("action", "PLUS"))
+        .perform(post("/cart/items").param("id", "1").param("action", "PLUS"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrlPattern("/items**"));
+        .andExpect(redirectedUrl("/cart/items"));
   }
 }

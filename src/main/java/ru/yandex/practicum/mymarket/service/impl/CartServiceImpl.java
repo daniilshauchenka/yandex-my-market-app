@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
   @Override
   public BigDecimal getTotal() {
     return cartItemRepository.findAll().stream()
-        .map(this::calculateItemTotal)
+        .map(CartItem::getTotalPrice)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
@@ -83,9 +83,5 @@ public class CartServiceImpl implements CartService {
 
   private void delete(CartItem cartItem) {
     cartItemRepository.delete(cartItem);
-  }
-
-  private BigDecimal calculateItemTotal(CartItem cartItem) {
-    return cartItem.getItem().getPrice().multiply(BigDecimal.valueOf(cartItem.getCount()));
   }
 }
