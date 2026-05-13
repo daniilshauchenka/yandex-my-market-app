@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/market_db
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:lq/db.changelog-master.xml
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+
+server:
+  error:
+    whitelabel:
+      enabled: false

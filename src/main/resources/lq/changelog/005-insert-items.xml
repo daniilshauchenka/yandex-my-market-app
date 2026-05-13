@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="005-insert-items" author="shauchenka-d">
+
+        <insert tableName="items">
+            <column name="title" value="Football Ball"/>
+            <column name="description" value="Professional football ball"/>
+            <column name="img_path" value="/images/ball.jpg"/>
+            <column name="price" valueNumeric="1000"/>
+        </insert>
+        <insert tableName="items">
+            <column name="title" value="Basketball Ball"/>
+            <column name="description" value="Indoor basketball ball"/>
+            <column name="img_path" value="/images/basketball.jpg"/>
+            <column name="price" valueNumeric="1500"/>
+        </insert>
+        <insert tableName="items">
+            <column name="title" value="Backpack"/>
+            <column name="description" value="Urban backpack"/>
+            <column name="img_path" value="/images/backpack.jpg"/>
+            <column name="price" valueNumeric="3500"/>
+        </insert>
+        <insert tableName="items">
+            <column name="title" value="Headphones"/>
+            <column name="description" value="Wireless headphones"/>
+            <column name="img_path" value="/images/headphones.jpg"/>
+            <column name="price" valueNumeric="7000"/>
+        </insert>
+        <insert tableName="items">
+            <column name="title" value="Laptop"/>
+            <column name="description" value="Gaming laptop"/>
+            <column name="img_path" value="/images/laptop.jpg"/>
+            <column name="price" valueNumeric="120000"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>
