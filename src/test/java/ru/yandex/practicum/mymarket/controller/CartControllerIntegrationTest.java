@@ -13,27 +13,41 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.mymarket.util.AbstractIntegrationTest;
 
-@Transactional
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import ru.yandex.practicum.mymarket.util.AbstractIntegrationTest;
+
 class CartControllerIntegrationTest extends AbstractIntegrationTest {
-  @Autowired private MockMvc mockMvc;
 
-  @Test
-  void shouldReturnCartPage() throws Exception {
+    @Autowired
+    private WebTestClient webTestClient;
 
-    mockMvc
-        .perform(get("/cart/items"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("cart"))
-        .andExpect(model().attributeExists("items"))
-        .andExpect(model().attributeExists("total"));
-  }
+    @Test
+    void shouldReturnCartPage() {
+        webTestClient.get()
+            .uri("/cart/items")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(String.class)
+            .consumeWith(response ->
+                assertThat(response.getResponseBody())
+                    .contains("cart"));
+    }
 
-  @Test
-  void shouldChangeCartItem() throws Exception {
-
-    mockMvc
-        .perform(post("/cart/items").param("id", "1").param("action", "PLUS"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/cart/items"));
-  }
+    @Test
+    void shouldChangeCartItem() {
+        webTestClient.post()
+            .uri(uriBuilder -> uriBuilder
+                .path("/cart/items")
+                .queryParam("id", 1)
+                .queryParam("action", "PLUS")
+                .build())
+            .exchange()
+            .expectStatus().is3xxRedirection()
+            .expectHeader()
+            .valueEquals("Location", "/cart/items");
+    }
 }
