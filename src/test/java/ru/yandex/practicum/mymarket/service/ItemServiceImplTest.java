@@ -1,22 +1,21 @@
 package ru.yandex.practicum.mymarket.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import ru.yandex.practicum.mymarket.dto.ItemDto;
 import ru.yandex.practicum.mymarket.dto.PagingDto;
 import ru.yandex.practicum.mymarket.entity.CartItem;
@@ -32,13 +31,17 @@ import ru.yandex.practicum.mymarket.util.TestData;
 @ExtendWith(MockitoExtension.class)
 class ItemServiceImplTest {
 
-  @Mock private ItemRepository itemRepository;
+    @Mock
+    private ItemRepository itemRepository;
 
-  @Mock private CartItemRepository cartItemRepository;
+    @Mock
+    private CartItemRepository cartItemRepository;
 
-  @Mock private ItemMapper itemMapper;
+    @Mock
+    private ItemMapper itemMapper;
 
-  @InjectMocks private ItemServiceImpl itemService;
+    @InjectMocks
+    private ItemServiceImpl itemService;
 
     @Test
     void shouldReturnItem() {
@@ -52,65 +55,69 @@ class ItemServiceImplTest {
             item.getPrice(),
             cartItem.getCount()
         );
-        when(itemRepository.findById(1L))
-            .thenReturn(Optional.of(item));
-        when(cartItemRepository.findByItemId(1L))
-            .thenReturn(Optional.of(cartItem));
-        when(itemMapper.toDto(item, cartItem.getCount()))
-            .thenReturn(dto);
-        ItemDto actual = itemService.getItem(1L);
-        assertThat(actual.count())
-            .isEqualTo(cartItem.getCount());
+        when(itemRepository.findById(1L)).thenReturn(Mono.just(item));
+        when(cartItemRepository.findByItemId(1L)).thenReturn(Mono.just(cartItem));
+        when(itemMapper.toDto(item, cartItem.getCount())).thenReturn(dto);
+        StepVerifier.create(itemService.getItem(1L))
+            .assertNext(actual ->
+                assertThat(actual.count()).isEqualTo(cartItem.getCount()))
+            .verifyComplete();
     }
 
-  @Test
-  void shouldThrowWhenItemNotFound() {
+    @Test
+    void shouldThrowWhenItemNotFound() {
+        when(itemRepository.findById(1L))
+            .thenReturn(Mono.empty());
+        StepVerifier.create(itemService.getItem(1L))
+            .expectError(ItemNotFoundException.class)
+            .verify();
+    }
 
-    when(itemRepository.findById(1L)).thenReturn(Optional.empty());
+    @Test
+    void shouldReturnItems() {
+        Item item = TestData.item();
+        ItemDto dto = TestData.itemDto();
+        when(itemRepository
+            .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                anyString(),
+                anyString(),
+                any(PageRequest.class)))
+            .thenReturn(Flux.just(item));
+        when(cartItemRepository.findAllByItemIdIn(any())).thenReturn(Flux.empty());
+        when(itemMapper.toDto(item, 0)).thenReturn(dto);
+        when(itemRepository
+            .countByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                anyString(),
+                anyString()))
+            .thenReturn(Mono.just(1L));
+        StepVerifier.create(
+                itemService.getItemsPage("", SortType.NO, 1, 5))
+            .assertNext(
+                page -> {
+                    assertThat(page.items()).hasSize(1);
+                    assertThat(page.items().getFirst())
+                        .hasSize(3);
+                    assertThat(page.items()
+                        .getFirst()
+                        .getFirst())
+                        .isEqualTo(dto);
+                })
+            .verifyComplete();
+    }
 
-    assertThatThrownBy(() -> itemService.getItem(1L)).isInstanceOf(ItemNotFoundException.class);
-  }
-
-  @Test
-  void shouldReturnItemsWithPlaceholders() {
-
-    Item item = TestData.item();
-
-    ItemDto dto = TestData.itemDto();
-
-    Page<Item> page = new PageImpl<>(List.of(item));
-
-    when(itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-            anyString(), anyString(), any(Pageable.class)))
-        .thenReturn(page);
-
-      when(itemMapper.toDto(item, 0))
-          .thenReturn(dto);
-
-    when(cartItemRepository.findAllByItemIdIn(any())).thenReturn(Collections.emptyList());
-
-    List<List<ItemDto>> result = itemService.getItems("", SortType.NO, 1, 5);
-
-    assertThat(result).hasSize(1);
-
-    assertThat(result.getFirst()).hasSize(3);
-
-    assertThat(result.getFirst().get(1).id()).isEqualTo(-1L);
-  }
-
-  @Test
-  void shouldReturnPaging() {
-
-    Page<Item> page = new PageImpl<>(List.of(TestData.item()));
-
-    when(itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-            anyString(), anyString(), any(Pageable.class)))
-        .thenReturn(page);
-
-    PagingDto paging = itemService.getPaging("", SortType.NO, 1, 5);
-
-    assertThat(paging.pageNumber()).isEqualTo(1);
-
-    assertThat(paging.pageSize()).isEqualTo(5);
-  }
+    @Test
+    void shouldReturnPaging() {
+        when(itemRepository.countByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+            anyString(),
+            anyString()
+        )).thenReturn(Mono.just(1L));
+        StepVerifier.create(
+                itemService.getPaging("", SortType.NO, 1, 5)
+            )
+            .assertNext(paging -> {
+                assertThat(paging.pageNumber()).isEqualTo(1);
+                assertThat(paging.pageSize()).isEqualTo(5);
+            })
+            .verifyComplete();
+    }
 }

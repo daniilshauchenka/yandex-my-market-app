@@ -44,16 +44,22 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public Mono<Void> changeCount(Long itemId, Action action) {
         return cartItemRepository
-                .findByItemId(itemId)
-                .flatMap(
-                        cartItem ->
-                                switch (action) {
-                                    case PLUS -> increase(cartItem);
-                                    case MINUS -> decrease(cartItem);
-                                    case DELETE -> delete(cartItem);
-                                })
-                .switchIfEmpty(action == Action.PLUS ? createCartItem(itemId) : Mono.empty())
-                .then();
+            .findByItemId(itemId)
+            .flatMap(
+                cartItem ->
+                    switch (action) {
+                        case PLUS -> increase(cartItem);
+                        case MINUS -> decrease(cartItem);
+                        case DELETE -> delete(cartItem);
+                    })
+            .switchIfEmpty(
+                Mono.defer(() ->
+                    action == Action.PLUS
+                        ? createCartItem(itemId)
+                        : Mono.empty()
+                )
+            )
+            .then();
     }
 
     private Mono<CartItemDto> toDto(CartItem cartItem) {
