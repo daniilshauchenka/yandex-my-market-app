@@ -1,15 +1,15 @@
 package ru.yandex.practicum.mymarket.controller;
 
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import ru.yandex.practicum.mymarket.enums.Action;
+import reactor.core.publisher.Mono;
+import ru.yandex.practicum.mymarket.dto.ChangeCartItemRequest;
 import ru.yandex.practicum.mymarket.service.CartService;
 
 @Controller
@@ -21,21 +21,20 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
-    public String cart(Model model) {
-        fillCartModel(model);
-        return "cart";
+    public Mono<String> cart(Model model) {
+        return Mono.zip(cartService.getCartItems(), cartService.getTotal())
+                .map(
+                        tuple -> {
+                            model.addAttribute("items", tuple.getT1());
+                            model.addAttribute("total", tuple.getT2());
+                            return "cart";
+                        });
     }
 
     @PostMapping
-    public String changeCartItem(
-        @RequestParam @Positive Long id, @RequestParam Action action, Model model) {
-        cartService.changeCount(id, action);
-        fillCartModel(model);
-        return "redirect:/cart/items";
-    }
-
-    private void fillCartModel(Model model) {
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
+    public Mono<String> changeCartItem(@ModelAttribute ChangeCartItemRequest request) {
+        return cartService
+                .changeCount(request.id(), request.action())
+                .thenReturn("redirect:/cart/items");
     }
 }

@@ -1,8 +1,12 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5433/market_db
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/market_db
     username: postgres
     password: postgres
+  webflux:
+    hiddenmethod:
+      filter:
+        enabled: true
 
   jpa:
     hibernate:
@@ -13,6 +17,9 @@ spring:
         format_sql: true
 
   liquibase:
+    url: jdbc:postgresql://localhost:5433/market_db
+    user: postgres
+    password: postgres
     change-log: classpath:lq/db.changelog-master.xml
 
   messages:
@@ -23,3 +30,10 @@ server:
   error:
     whitelabel:
       enabled: false
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.web.reactive: DEBUG
+    org.springframework.web.reactive.result.method.annotation: TRACE
+    org.springframework.web.server.adapter.HttpWebHandlerAdapter: DEBUG

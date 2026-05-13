@@ -6,10 +6,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.yandex.practicum.mymarket.enums.Action;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
+import ru.yandex.practicum.mymarket.dto.ChangeItemActionRequest;
+import ru.yandex.practicum.mymarket.dto.ChangeItemRequest;
 import ru.yandex.practicum.mymarket.enums.SortType;
 import ru.yandex.practicum.mymarket.service.CartService;
 import ru.yandex.practicum.mymarket.service.ItemService;
@@ -20,52 +24,59 @@ import ru.yandex.practicum.mymarket.validation.AllowedPageSize;
 @Validated
 public class ItemController {
 
-  private final ItemService itemService;
-  private final CartService cartService;
+    private final ItemService itemService;
+    private final CartService cartService;
 
-  @GetMapping({"/", "/items"})
-  public String items(
-      @RequestParam(defaultValue = "") String search,
-      @RequestParam(defaultValue = "NO") SortType sort,
-      @RequestParam(defaultValue = "1") @Positive Integer pageNumber,
-      @RequestParam(defaultValue = "5") @AllowedPageSize Integer pageSize,
-      Model model) {
-    model.addAttribute("items", itemService.getItems(search, sort, pageNumber, pageSize));
-    model.addAttribute("paging", itemService.getPaging(search, sort, pageNumber, pageSize));
-    model.addAttribute("search", search);
-    model.addAttribute("sort", sort);
-    return "items";
-  }
+    @GetMapping({"/", "/items"})
+    public Mono<String> items(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "NO") SortType sort,
+            @RequestParam(defaultValue = "1") @Positive Integer pageNumber,
+            @RequestParam(defaultValue = "5") @AllowedPageSize Integer pageSize,
+            Model model) {
+        return itemService
+                .getItemsPage(search, sort, pageNumber, pageSize)
+                .map(
+                        page -> {
+                            model.addAttribute("items", page.items());
+                            model.addAttribute("paging", page.paging());
+                            model.addAttribute("search", search);
+                            model.addAttribute("sort", sort);
+                            return "items";
+                        });
+    }
 
-  @PostMapping("/items")
-  public String changeFromItems(
-      @RequestParam Long id,
-      @RequestParam Action action,
-      @RequestParam(defaultValue = "") String search,
-      @RequestParam(defaultValue = "NO") SortType sort,
-      @RequestParam(defaultValue = "1") @Positive Integer pageNumber,
-      @RequestParam(defaultValue = "5") @AllowedPageSize Integer pageSize) {
-    cartService.changeCount(id, action);
-    return "redirect:/items?search="
-        + search
-        + "&sort="
-        + sort
-        + "&pageNumber="
-        + pageNumber
-        + "&pageSize="
-        + pageSize;
-  }
+    @PostMapping("/items")
+    public Mono<String> changeFromItems(@ModelAttribute ChangeItemRequest request) {
+        return cartService
+                .changeCount(request.id(), request.action())
+                .thenReturn(buildItemsRedirectUrl(request));
+    }
 
-  @GetMapping("/items/{id}")
-  public String item(@PathVariable Long id, Model model) {
-    model.addAttribute("item", itemService.getItem(id));
-    return "item";
-  }
+    @GetMapping("/items/{id}")
+    public Mono<String> item(@PathVariable Long id, Model model) {
+        return itemService
+                .getItem(id)
+                .map(
+                        item -> {
+                            model.addAttribute("item", item);
+                            return "item";
+                        });
+    }
 
-  @PostMapping("/items/{id}")
-  public String changeFromItem(@PathVariable Long id, @RequestParam Action action, Model model) {
-    cartService.changeCount(id, action);
-    model.addAttribute("item", itemService.getItem(id));
-    return "redirect:/items/" + id;
-  }
+    @PostMapping("/items/{id}")
+    public Mono<String> changeFromItem(
+            @PathVariable Long id, @ModelAttribute ChangeItemActionRequest request) {
+        return cartService.changeCount(id, request.action()).thenReturn("redirect:/items/" + id);
+    }
+
+    private String buildItemsRedirectUrl(ChangeItemRequest request) {
+        return UriComponentsBuilder.fromPath("/items")
+                .queryParam("search", request.search())
+                .queryParam("sort", request.sort())
+                .queryParam("pageNumber", request.pageNumber())
+                .queryParam("pageSize", request.pageSize())
+                .build()
+                .toUriString();
+    }
 }
