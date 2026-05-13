@@ -1,16 +1,18 @@
 # MyMarket
 
-Online store application built with Spring Boot.
+Reactive online store application built with Spring Boot and Spring WebFlux.
 
 ## Tech Stack
 - Java 21
 - Spring Boot
-- Spring MVC
-- Spring Data JPA
+- Spring WebFlux
+- Spring Data R2DBC
 - PostgreSQL
 - Thymeleaf
+- Reactor
 - Testcontainers
 - JUnit 5
+- WebTestClient
 - Docker
 
 ---
@@ -36,7 +38,7 @@ mvn test
 
 * Testcontainers 
 * PostgreSQL container 
-* MockMvc
+* WebTestClient
 
 ### 4. Features
 * Browse products
