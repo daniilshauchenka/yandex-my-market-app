@@ -3,10 +3,7 @@ spring:
     url: r2dbc:postgresql://localhost:5433/market_db
     username: postgres
     password: postgres
-  webflux:
-    hiddenmethod:
-      filter:
-        enabled: true
+
 
   jpa:
     hibernate:
