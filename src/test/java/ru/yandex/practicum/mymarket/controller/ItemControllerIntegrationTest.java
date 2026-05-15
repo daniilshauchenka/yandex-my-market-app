@@ -1,66 +1,78 @@
 package ru.yandex.practicum.mymarket.controller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import ru.yandex.practicum.mymarket.util.AbstractIntegrationTest;
 
-@Transactional
 class ItemControllerIntegrationTest extends AbstractIntegrationTest {
 
-  @Autowired private MockMvc mockMvc;
+    @Autowired
+    private WebTestClient webTestClient;
 
-  @Test
-  void shouldReturnItemsPage() throws Exception {
+    @Test
+    void shouldReturnItemsPage() {
+        webTestClient
+            .get()
+            .uri("/items")
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectBody(String.class)
+            .consumeWith(response -> assertThat(response.getResponseBody()).contains("items"));
+    }
 
-    mockMvc
-        .perform(get("/items"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("items"))
-        .andExpect(model().attributeExists("items"))
-        .andExpect(model().attributeExists("paging"));
-  }
+    @Test
+    void shouldReturnItemPage() {
+        webTestClient
+            .get()
+            .uri("/items/1")
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectBody(String.class)
+            .consumeWith(response -> assertThat(response.getResponseBody()).contains("Ball"));
+    }
 
-  @Test
-  void shouldReturnItemPage() throws Exception {
+    @Test
+    void shouldReturn404WhenItemNotFound() {
+        webTestClient.get().uri("/items/999999").exchange().expectStatus().isNotFound();
+    }
 
-    mockMvc
-        .perform(get("/items/1"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("item"))
-        .andExpect(model().attributeExists("item"));
-  }
+    @Test
+    void shouldAddItemToCart() {
+        webTestClient
+            .post()
+            .uri(
+                uriBuilder ->
+                    uriBuilder
+                        .path("/items")
+                        .queryParam("id", 1)
+                        .queryParam("action", "PLUS")
+                        .queryParam("search", "")
+                        .queryParam("sort", "NO")
+                        .queryParam("pageNumber", 1)
+                        .queryParam("pageSize", 5)
+                        .build())
+            .exchange()
+            .expectStatus()
+            .is3xxRedirection();
+        ;
+    }
 
-  @Test
-  void shouldReturn404WhenItemNotFound() throws Exception {
-
-    mockMvc.perform(get("/items/999999")).andExpect(status().isNotFound());
-  }
-
-  @Test
-  void shouldAddItemToCart() throws Exception {
-
-    mockMvc
-        .perform(post("/items").param("id", "1").param("action", "PLUS"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrlPattern("/items**"));
-  }
-
-  @Test
-  void shouldChangeItemCountFromItemPage() throws Exception {
-
-    mockMvc
-        .perform(post("/items/1").param("action", "PLUS"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/items/1"));
-  }
+    @Test
+    void shouldChangeItemCountFromItemPage() {
+        webTestClient
+            .post()
+            .uri("/items/1")
+            .bodyValue("action=PLUS")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .exchange()
+            .expectStatus()
+            .is3xxRedirection()
+            .expectHeader()
+            .valueEquals("Location", "/items/1");
+    }
 }

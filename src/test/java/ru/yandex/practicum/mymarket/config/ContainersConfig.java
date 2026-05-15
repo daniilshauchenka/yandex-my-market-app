@@ -1,9 +1,9 @@
-package ru.yandex.practicum.mymarket.config;
+ package ru.yandex.practicum.mymarket.config;
 
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.PostgreSQLContainer;
+ import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+ import org.testcontainers.containers.PostgreSQLContainer;
 
-public interface ContainersConfig {
+ public interface ContainersConfig {
 
   @ServiceConnection
   PostgreSQLContainer<?> POSTGRES =
@@ -11,4 +11,4 @@ public interface ContainersConfig {
           .withDatabaseName("market-test")
           .withUsername("postgres")
           .withPassword("postgres");
-}
+ }

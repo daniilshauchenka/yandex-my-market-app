@@ -9,10 +9,10 @@ import ru.yandex.practicum.mymarket.entity.Item;
 @Mapper(config = GlobalMapperConfig.class)
 public interface ItemMapper {
 
-  @Mapping(target = "count", source = "count")
-  ItemDto toDto(Item item, Integer count);
+    @Mapping(target = "count", source = "count")
+    ItemDto toDto(Item item, Integer count);
 
-  default ItemDto toDto(Item item) {
-    return toDto(item, 0);
-  }
+    default ItemDto toDto(Item item) {
+        return toDto(item, 0);
+    }
 }

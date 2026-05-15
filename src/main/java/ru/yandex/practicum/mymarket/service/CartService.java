@@ -2,14 +2,15 @@ package ru.yandex.practicum.mymarket.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mymarket.dto.CartItemDto;
 import ru.yandex.practicum.mymarket.enums.Action;
 
 public interface CartService {
 
-  List<CartItemDto> getCartItems();
+    Mono<List<CartItemDto>> getCartItems();
 
-  void changeCount(Long itemId, Action action);
+    Mono<BigDecimal> getTotal();
 
-  BigDecimal getTotal();
+    Mono<Void> changeCount(Long itemId, Action action);
 }
