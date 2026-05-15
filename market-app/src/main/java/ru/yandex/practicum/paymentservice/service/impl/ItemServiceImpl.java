@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +42,10 @@ public class ItemServiceImpl implements ItemService {
   private final ItemMapper itemMapper;
 
   @Override
+  @Cacheable(
+      value = "items-page",
+      key = "#search + '-' + #sortType + '-' + #pageNumber + '-' + #pageSize"
+  )
   public List<List<ItemDto>> getItems(
       String search, SortType sortType, int pageNumber, int pageSize) {
 
@@ -60,10 +65,9 @@ public class ItemServiceImpl implements ItemService {
   }
 
   @Override
+  @Cacheable(value = "items", key = "#id")
   public ItemDto getItem(Long id) {
-
     Item item = itemRepository.findById(id).orElseThrow(ItemNotFoundException::new);
-
     return enrich(item);
   }
 
