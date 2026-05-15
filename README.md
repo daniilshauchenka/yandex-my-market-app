@@ -15,7 +15,7 @@ Online store application built with Spring Boot.
 
 ---
 
-## Run the Application
+## Run the ru.yandex.practicum.paymentservice.Application
 
 ### 1. Build the project
 
