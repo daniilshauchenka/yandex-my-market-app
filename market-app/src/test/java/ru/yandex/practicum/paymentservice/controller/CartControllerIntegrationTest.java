@@ -11,29 +11,29 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.yandex.practicum.paymentservice.util.AbstractIntegrationTest;
 
 @Transactional
 class CartControllerIntegrationTest extends AbstractIntegrationTest {
-  @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-  @Test
-  void shouldReturnCartPage() throws Exception {
+    @Test
+    void shouldReturnCartPage() throws Exception {
 
-    mockMvc
-        .perform(get("/cart/items"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("cart"))
-        .andExpect(model().attributeExists("items"))
-        .andExpect(model().attributeExists("total"));
-  }
+        mockMvc.perform(get("/cart/items"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("cart"))
+                .andExpect(model().attributeExists("items"))
+                .andExpect(model().attributeExists("total"));
+    }
 
-  @Test
-  void shouldChangeCartItem() throws Exception {
+    @Test
+    void shouldChangeCartItem() throws Exception {
 
-    mockMvc
-        .perform(post("/cart/items").param("id", "1").param("action", "PLUS"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/cart/items"));
-  }
+        mockMvc.perform(post("/cart/items").param("id", "1").param("action", "PLUS"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/cart/items"));
+    }
 }

@@ -3,8 +3,8 @@ package ru.yandex.practicum.paymentservice;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import ru.yandex.practicum.paymentservice.config.PaymentProperties;
 
+import ru.yandex.practicum.paymentservice.config.PaymentProperties;
 
 @SpringBootApplication
 @EnableConfigurationProperties(PaymentProperties.class)
@@ -14,4 +14,3 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 }
-

@@ -1,8 +1,10 @@
 package ru.yandex.practicum.paymentservice.mapper;
 
 import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
 import ru.yandex.practicum.paymentservice.config.GlobalMapperConfig;
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
@@ -10,13 +12,13 @@ import ru.yandex.practicum.paymentservice.entity.CartItem;
 @Mapper(config = GlobalMapperConfig.class)
 public interface CartItemMapper {
 
-  @Mapping(target = "id", source = "item.id")
-  @Mapping(target = "title", source = "item.title")
-  @Mapping(target = "description", source = "item.description")
-  @Mapping(target = "imgPath", source = "item.imgPath")
-  @Mapping(target = "price", source = "item.price")
-  @Mapping(target = "count", source = "count")
-  CartItemDto toDto(CartItem cartItem);
+    @Mapping(target = "id", source = "item.id")
+    @Mapping(target = "title", source = "item.title")
+    @Mapping(target = "description", source = "item.description")
+    @Mapping(target = "imgPath", source = "item.imgPath")
+    @Mapping(target = "price", source = "item.price")
+    @Mapping(target = "count", source = "count")
+    CartItemDto toDto(CartItem cartItem);
 
-  List<CartItemDto> toDtoList(List<CartItem> cartItems);
+    List<CartItemDto> toDtoList(List<CartItem> cartItems);
 }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
 import ru.yandex.practicum.paymentservice.repository.CartItemRepository;
@@ -21,34 +22,35 @@ import ru.yandex.practicum.paymentservice.util.AbstractIntegrationTest;
 @Transactional
 class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
-  @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-  @Autowired private CartItemRepository cartItemRepository;
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
-  @Autowired private ItemRepository itemRepository;
+    @Autowired
+    private ItemRepository itemRepository;
 
-  @BeforeEach
-  void setup() {
-    cartItemRepository.deleteAll();
-    Item item = itemRepository.findById(1L).orElseThrow();
-    CartItem cartItem = CartItem.builder().item(item).count(2).build();
-    cartItemRepository.save(cartItem);
-  }
+    @BeforeEach
+    void setup() {
+        cartItemRepository.deleteAll();
+        Item item = itemRepository.findById(1L).orElseThrow();
+        CartItem cartItem = CartItem.builder().item(item).count(2).build();
+        cartItemRepository.save(cartItem);
+    }
 
-  @Test
-  void shouldCreateOrder() throws Exception {
-    mockMvc
-        .perform(post("/buy"))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrlPattern("/orders/*?newOrder=true"));
-  }
+    @Test
+    void shouldCreateOrder() throws Exception {
+        mockMvc.perform(post("/buy"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("/orders/*?newOrder=true"));
+    }
 
-  @Test
-  void shouldReturnOrdersPage() throws Exception {
-    mockMvc
-        .perform(get("/orders"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("orders"))
-        .andExpect(model().attributeExists("orders"));
-  }
+    @Test
+    void shouldReturnOrdersPage() throws Exception {
+        mockMvc.perform(get("/orders"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("orders"))
+                .andExpect(model().attributeExists("orders"));
+    }
 }

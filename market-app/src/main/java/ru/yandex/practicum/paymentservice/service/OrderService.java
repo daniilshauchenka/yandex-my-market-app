@@ -1,13 +1,14 @@
 package ru.yandex.practicum.paymentservice.service;
 
 import java.util.List;
+
 import ru.yandex.practicum.paymentservice.dto.OrderDto;
 
 public interface OrderService {
 
-  List<OrderDto> getOrders();
+    List<OrderDto> getOrders();
 
-  OrderDto getOrder(Long id);
+    OrderDto getOrder(Long id);
 
-  Long buy();
+    Long buy();
 }

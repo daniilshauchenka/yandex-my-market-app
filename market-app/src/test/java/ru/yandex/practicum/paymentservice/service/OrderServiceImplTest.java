@@ -11,11 +11,13 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import ru.yandex.practicum.paymentservice.dto.OrderDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Order;
@@ -30,81 +32,85 @@ import ru.yandex.practicum.paymentservice.util.TestData;
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
 
-  @Mock private OrderRepository orderRepository;
+    @Mock
+    private OrderRepository orderRepository;
 
-  @Mock private CartItemRepository cartItemRepository;
+    @Mock
+    private CartItemRepository cartItemRepository;
 
-  @Mock private OrderMapper orderMapper;
+    @Mock
+    private OrderMapper orderMapper;
 
-  @InjectMocks private OrderServiceImpl orderService;
+    @InjectMocks
+    private OrderServiceImpl orderService;
 
-  @Test
-  void shouldReturnOrders() {
+    @Test
+    void shouldReturnOrders() {
 
-    List<Order> orders = List.of(TestData.order());
+        List<Order> orders = List.of(TestData.order());
 
-    List<OrderDto> expected = List.of(TestData.orderDto());
+        List<OrderDto> expected = List.of(TestData.orderDto());
 
-    when(orderRepository.findAllByOrderByIdDesc()).thenReturn(orders);
+        when(orderRepository.findAllByOrderByIdDesc()).thenReturn(orders);
 
-    when(orderMapper.toDtoList(orders)).thenReturn(expected);
+        when(orderMapper.toDtoList(orders)).thenReturn(expected);
 
-    List<OrderDto> actual = orderService.getOrders();
+        List<OrderDto> actual = orderService.getOrders();
 
-    assertThat(actual).isEqualTo(expected);
-  }
+        assertThat(actual).isEqualTo(expected);
+    }
 
-  @Test
-  void shouldReturnOrder() {
+    @Test
+    void shouldReturnOrder() {
 
-    Order order = TestData.order();
+        Order order = TestData.order();
 
-    OrderDto dto = TestData.orderDto();
+        OrderDto dto = TestData.orderDto();
 
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-    when(orderMapper.toDto(order)).thenReturn(dto);
+        when(orderMapper.toDto(order)).thenReturn(dto);
 
-    OrderDto actual = orderService.getOrder(1L);
+        OrderDto actual = orderService.getOrder(1L);
 
-    assertThat(actual).isEqualTo(dto);
-  }
+        assertThat(actual).isEqualTo(dto);
+    }
 
-  @Test
-  void shouldThrowWhenOrderNotFound() {
+    @Test
+    void shouldThrowWhenOrderNotFound() {
 
-    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> orderService.getOrder(1L)).isInstanceOf(OrderNotFoundException.class);
-  }
+        assertThatThrownBy(() -> orderService.getOrder(1L)).isInstanceOf(OrderNotFoundException.class);
+    }
 
-  @Test
-  void shouldThrowWhenCartIsEmpty() {
+    @Test
+    void shouldThrowWhenCartIsEmpty() {
 
-    when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(Collections.emptyList());
+        when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(Collections.emptyList());
 
-    assertThatThrownBy(() -> orderService.buy()).isInstanceOf(EmptyCartException.class);
-  }
+        assertThatThrownBy(() -> orderService.buy()).isInstanceOf(EmptyCartException.class);
+    }
 
-  @Test
-  void shouldCreateOrder() {
+    @Test
+    void shouldCreateOrder() {
 
-    CartItem cartItem = TestData.cartItem(BigDecimal.valueOf(100), 2);
+        CartItem cartItem = TestData.cartItem(BigDecimal.valueOf(100), 2);
 
-    Order savedOrder = TestData.order();
+        Order savedOrder = TestData.order();
 
-    savedOrder.setId(1L);
+        savedOrder.setId(1L);
 
-    when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(List.of(cartItem));
+        when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(List.of(cartItem));
 
-    when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
+        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-    Long orderId = orderService.buy();
+        Long orderId = orderService.buy();
 
-    assertThat(orderId).isEqualTo(1L);
+        assertThat(orderId).isEqualTo(1L);
 
-    verify(orderRepository).save(any(Order.class));
+        verify(orderRepository).save(any(Order.class));
 
-    verify(cartItemRepository).deleteAllInBatch(anyList());
-  }
+        verify(cartItemRepository).deleteAllInBatch(anyList());
+    }
 }

@@ -5,10 +5,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 public interface ContainersConfig {
 
-  @ServiceConnection
-  PostgreSQLContainer<?> POSTGRES =
-      new PostgreSQLContainer<>("postgres:16")
-          .withDatabaseName("market-test")
-          .withUsername("postgres")
-          .withPassword("postgres");
+    @ServiceConnection
+    PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16")
+            .withDatabaseName("market-test")
+            .withUsername("postgres")
+            .withPassword("postgres");
 }

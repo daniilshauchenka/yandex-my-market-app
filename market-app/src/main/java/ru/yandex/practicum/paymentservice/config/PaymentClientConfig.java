@@ -2,6 +2,7 @@ package ru.yandex.practicum.paymentservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import ru.yandex.practicum.payment.client.api.DefaultApi;
 import ru.yandex.practicum.payment.client.invoker.ApiClient;
 

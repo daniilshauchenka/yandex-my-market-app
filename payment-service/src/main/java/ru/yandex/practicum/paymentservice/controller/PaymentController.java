@@ -1,15 +1,17 @@
 package ru.yandex.practicum.paymentservice.controller;
 
-
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
-import ru.yandex.practicum.paymentservice.service.PaymentService;
+import org.springframework.web.server.ServerWebExchange;
+
 import ru.yandex.practicum.payment.api.DefaultApi;
 import ru.yandex.practicum.payment.model.BalanceResponse;
 import ru.yandex.practicum.payment.model.PaymentRequest;
 import ru.yandex.practicum.payment.model.PaymentResponse;
+import ru.yandex.practicum.paymentservice.service.PaymentService;
+
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,27 +19,20 @@ public class PaymentController implements DefaultApi {
 
     private final PaymentService paymentService;
 
-
-    public Mono<ResponseEntity<BalanceResponse>> getBalance() {
-        return paymentService.getBalance()
-            .map(balance -> {
-                BalanceResponse response = new BalanceResponse();
-                response.setBalance(balance);
-                return ResponseEntity.ok(response);
-            });
+    @Override
+    public Mono<ResponseEntity<BalanceResponse>> getBalance(ServerWebExchange exchange) {
+        return paymentService.getBalance().map(balance -> {
+            BalanceResponse response = new BalanceResponse();
+            response.setBalance(balance);
+            return ResponseEntity.ok(response);
+        });
     }
 
-
-    public Mono<ResponseEntity<PaymentResponse>> pay(
-        Mono<PaymentRequest> paymentRequestMono) {
-
+    @Override
+    public Mono<ResponseEntity<PaymentResponse>> makePayment(
+            Mono<PaymentRequest> paymentRequestMono, ServerWebExchange exchange) {
         return paymentRequestMono
-            .flatMap(request ->
-                paymentService.pay(request.getAmount()))
-            .map(success -> {
-                PaymentResponse response = new PaymentResponse();
-                response.setSuccess(success);
-                return ResponseEntity.ok(response);
-            });
+                .flatMap(request -> paymentService.makePayment(request.getAmount()))
+                .map(ResponseEntity::ok);
     }
 }
