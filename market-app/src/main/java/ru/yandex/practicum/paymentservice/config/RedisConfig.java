@@ -1,6 +1,7 @@
 package ru.yandex.practicum.paymentservice.config;
 
 import java.time.Duration;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -14,10 +15,8 @@ public class RedisConfig {
     public RedisCacheConfiguration cacheConfiguration() {
 
         return RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(5))
-            .serializeValuesWith(
-                RedisSerializationContext.SerializationPair
-                    .fromSerializer(new GenericJackson2JsonRedisSerializer())
-            );
+                .entryTtl(Duration.ofMinutes(5))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new GenericJackson2JsonRedisSerializer()));
     }
 }

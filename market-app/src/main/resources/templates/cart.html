@@ -47,9 +47,20 @@
         <div class="row p-2">
             <div class="col">
                 <form action="/buy" method="post" th:if="${!items.isEmpty()}">
-                    <div class="hstack gap-3">
-                        <h2 th:text="'Итого: '+${total}+' руб.'"/>
-                        <button class="btn btn-warning ms-auto">Купить</button>
+                    <div th:if="${!items.isEmpty()}">
+                        <div class="hstack gap-3">
+                            <h2 th:text="'Итого: '+${total}+' руб.'"></h2>
+                            <form action="/buy" method="post">
+                                <button class="btn btn-warning ms-auto" th:disabled="${!paymentAvailable}">
+                                    Купить
+                                </button>
+                            </form>
+                        </div>
+                        <div
+                                class="text-danger mt-2"
+                                th:if="${!paymentAvailable}">
+                            Сервис оплаты недоступен
+                        </div>
                     </div>
                 </form>
             </div>
