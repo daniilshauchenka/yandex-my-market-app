@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.testng.annotations.Test;
 
 import ru.yandex.practicum.paymentservice.exception.PaymentFailedException;
 import ru.yandex.practicum.paymentservice.service.impl.PaymentGatewayService;

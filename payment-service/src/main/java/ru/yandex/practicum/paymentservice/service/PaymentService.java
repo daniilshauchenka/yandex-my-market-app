@@ -19,17 +19,20 @@ public class PaymentService {
     }
 
     public Mono<PaymentResponse> makePayment(BigDecimal amount) {
-        BigDecimal current = balance.get();
-        PaymentResponse response = new PaymentResponse();
-        if (current.compareTo(amount) < 0) {
-            response.setSuccess(false);
-            response.setBalance(current);
-            return Mono.just(response);
+        while (true) {
+            BigDecimal current = balance.get();
+            PaymentResponse response = new PaymentResponse();
+            if (current.compareTo(amount) < 0) {
+                response.setSuccess(false);
+                response.setBalance(current);
+                return Mono.just(response);
+            }
+            BigDecimal updated = current.subtract(amount);
+            if (balance.compareAndSet(current, updated)) {
+                response.setSuccess(true);
+                response.setBalance(updated);
+                return Mono.just(response);
+            }
         }
-        BigDecimal updated = current.subtract(amount);
-        balance.set(updated);
-        response.setSuccess(true);
-        response.setBalance(updated);
-        return Mono.just(response);
     }
 }
