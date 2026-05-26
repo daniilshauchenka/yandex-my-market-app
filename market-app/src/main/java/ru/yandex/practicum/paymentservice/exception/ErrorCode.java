@@ -18,7 +18,9 @@ public enum ErrorCode {
 
     INTERNAL_ERROR("error.internal"),
 
-    PAYMENT_FAILED("error.payment.failed");
+    PAYMENT_FAILED("error.payment.failed"),
+
+    ACCESS_DENIED("error.access-denied");
 
     private final String messageKey;
 }

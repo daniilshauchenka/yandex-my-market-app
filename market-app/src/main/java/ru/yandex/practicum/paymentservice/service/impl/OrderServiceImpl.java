@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.dto.OrderDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Order;
@@ -29,22 +30,26 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final OrderMapper orderMapper;
     private final PaymentGatewayService paymentGatewayService;
+    private final CurrentUserService currentUserService;
 
     @Override
     public List<OrderDto> getOrders() {
-        return orderMapper.toDtoList(orderRepository.findAllByOrderByIdDesc());
+        Long userId = currentUserService.requireCurrentUser().getId();
+        return orderMapper.toDtoList(orderRepository.findAllByUserIdOrderByIdDesc(userId));
     }
 
     @Override
     public OrderDto getOrder(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(OrderNotFoundException::new);
+        Long userId = currentUserService.requireCurrentUser().getId();
+        Order order = orderRepository.findByIdAndUserId(id, userId).orElseThrow(OrderNotFoundException::new);
         return orderMapper.toDto(order);
     }
 
     @Override
     @Transactional
     public Long buy() {
-        List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
+        var user = currentUserService.requireCurrentUser();
+        List<CartItem> cartItems = cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId());
 
         if (cartItems.isEmpty()) {
             throw new EmptyCartException();
@@ -57,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
             throw new PaymentFailedException();
         }
 
-        Order order = Order.builder().totalSum(totalSum).build();
+        Order order = Order.builder().user(user).totalSum(totalSum).build();
         List<OrderItem> orderItems = cartItems.stream()
                 .map(cartItem -> OrderItem.builder()
                         .order(order)

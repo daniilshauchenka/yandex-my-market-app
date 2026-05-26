@@ -16,14 +16,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/", "/items", "/items/*").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/cart/**", "/orders/**", "/buy").authenticated()
-                        .anyRequest().authenticated())
+        return http.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.GET, "/", "/items", "/items/*")
+                        .permitAll()
+                        .requestMatchers("/error")
+                        .permitAll()
+                        .requestMatchers("/cart/**", "/orders/**", "/buy")
+                        .authenticated()
+                        .anyRequest()
+                        .authenticated())
                 .formLogin(Customizer.withDefaults())
-                .logout(logout -> logout.invalidateHttpSession(true).clearAuthentication(true).deleteCookies("JSESSIONID"))
+                .logout(logout -> logout.invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID"))
                 .build();
     }
 

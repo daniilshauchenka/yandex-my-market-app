@@ -1,5 +1,7 @@
 package ru.yandex.practicum.paymentservice.controller;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.Positive;
 
 import org.springframework.stereotype.Controller;
@@ -41,9 +43,11 @@ public class CartController {
 
     private void fillCartModel(Model model) {
         model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
+        BigDecimal total = cartService.getTotal();
+        model.addAttribute("total", total);
 
-        boolean paymentAvailable = paymentGatewayService.isAvailable();
+        BigDecimal balance = paymentGatewayService.tryGetBalance();
+        boolean paymentAvailable = balance != null && balance.compareTo(total) >= 0;
         model.addAttribute("paymentAvailable", paymentAvailable);
     }
 }

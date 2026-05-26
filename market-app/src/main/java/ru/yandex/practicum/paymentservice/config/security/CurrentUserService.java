@@ -21,7 +21,9 @@ public class CurrentUserService {
 
     public Optional<User> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return Optional.empty();
         }
         return userRepository.findByUsername(authentication.getName());
@@ -31,4 +33,3 @@ public class CurrentUserService {
         return getCurrentUser().orElseThrow(() -> new AccessDeniedException("User is not authenticated"));
     }
 }
-

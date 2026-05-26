@@ -9,11 +9,11 @@ import ru.yandex.practicum.paymentservice.entity.CartItem;
 
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    Optional<CartItem> findByItemId(Long itemId);
+    Optional<CartItem> findByUserIdAndItemId(Long userId, Long itemId);
 
-    List<CartItem> findAllByOrderByIdAsc();
+    List<CartItem> findAllByUserIdOrderByIdAsc(Long userId);
 
-    void deleteByItemId(Long itemId);
+    void deleteByUserIdAndItemId(Long userId, Long itemId);
 
-    List<CartItem> findAllByItemIdIn(List<Long> itemIds);
+    List<CartItem> findAllByUserIdAndItemIdIn(Long userId, List<Long> itemIds);
 }

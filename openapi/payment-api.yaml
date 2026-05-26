@@ -3,10 +3,19 @@ info:
   title: Payment API
   version: 1.0.0
 
+security:
+  - bearerAuth: []
+
 paths:
   /payments/balance:
     get:
       operationId: getBalance
+      parameters:
+        - name: X-User-Name
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Current balance
@@ -18,6 +27,12 @@ paths:
   /payments:
     post:
       operationId: makePayment
+      parameters:
+        - name: X-User-Name
+          in: header
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -33,6 +48,12 @@ paths:
                 $ref: '#/components/schemas/PaymentResponse'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     BalanceResponse:
       type: object

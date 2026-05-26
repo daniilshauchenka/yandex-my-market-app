@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -49,6 +50,15 @@ public class GlobalExceptionHandler {
 
         log.warn("Validation exception occurred. message={}", ex.getMessage());
         String message = messageSource.getMessage(ErrorCode.INVALID_PAGE_SIZE.getMessageKey(), null, locale);
+        model.addAttribute("message", message);
+        return "error";
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleAccessDeniedException(AccessDeniedException ex, Locale locale, Model model) {
+        log.warn("Access denied. message={}", ex.getMessage());
+        String message = messageSource.getMessage(ErrorCode.ACCESS_DENIED.getMessageKey(), null, locale);
         model.addAttribute("message", message);
         return "error";
     }

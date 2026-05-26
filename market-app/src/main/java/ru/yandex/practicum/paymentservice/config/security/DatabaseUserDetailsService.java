@@ -28,4 +28,3 @@ public class DatabaseUserDetailsService implements UserDetailsService {
                 .build();
     }
 }
-

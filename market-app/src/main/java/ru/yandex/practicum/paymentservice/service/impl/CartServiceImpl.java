@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
@@ -29,16 +30,19 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final ItemRepository itemRepository;
     private final CartItemMapper cartItemMapper;
+    private final CurrentUserService currentUserService;
 
     @Override
     public List<CartItemDto> getCartItems() {
-        List<CartItem> cartItems = cartItemRepository.findAllByOrderByIdAsc();
+        Long userId = currentUserService.requireCurrentUser().getId();
+        List<CartItem> cartItems = cartItemRepository.findAllByUserIdOrderByIdAsc(userId);
         return cartItemMapper.toDtoList(cartItems);
     }
 
     @Override
     public BigDecimal getTotal() {
-        return cartItemRepository.findAll().stream()
+        Long userId = currentUserService.requireCurrentUser().getId();
+        return cartItemRepository.findAllByUserIdOrderByIdAsc(userId).stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -46,7 +50,8 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void changeCount(Long itemId, Action action) {
-        CartItem cartItem = cartItemRepository.findByItemId(itemId).orElse(null);
+        Long userId = currentUserService.requireCurrentUser().getId();
+        CartItem cartItem = cartItemRepository.findByUserIdAndItemId(userId, itemId).orElse(null);
 
         if (cartItem == null) {
             if (action != Action.PLUS) {
@@ -65,7 +70,11 @@ public class CartServiceImpl implements CartService {
 
     private void createCartItem(Long itemId) {
         Item item = itemRepository.findById(itemId).orElseThrow(ItemNotFoundException::new);
-        CartItem cartItem = CartItem.builder().item(item).count(INITIAL_COUNT).build();
+        CartItem cartItem = CartItem.builder()
+                .user(currentUserService.requireCurrentUser())
+                .item(item)
+                .count(INITIAL_COUNT)
+                .build();
         cartItemRepository.save(cartItem);
     }
 
