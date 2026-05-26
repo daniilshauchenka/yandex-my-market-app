@@ -12,6 +12,8 @@
     <include file="lq/changelog/002-create-cart-items.xml"/>
     <include file="lq/changelog/003-create-orders.xml"/>
     <include file="lq/changelog/004-create-order-items.xml"/>
+    <include file="lq/changelog/006-create-users.xml"/>
+    <include file="lq/changelog/007-add-user-ownership.xml"/>
     <include file="lq/changelog/005-insert-items.xml"/>
 
 
