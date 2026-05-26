@@ -1,7 +1,10 @@
 package ru.yandex.practicum.paymentservice.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.csrf;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 import java.math.BigDecimal;
 
@@ -28,10 +31,12 @@ class PaymentControllerTest {
 
     @Test
     void shouldReturnBalance() {
-        when(paymentService.getBalance()).thenReturn(Mono.just(BigDecimal.valueOf(5000)));
+        when(paymentService.getBalance(eq("buyer"))).thenReturn(Mono.just(BigDecimal.valueOf(5000)));
         webTestClient
+                .mutateWith(mockJwt())
                 .get()
                 .uri("/payments/balance")
+                .header("X-User-Name", "buyer")
                 .exchange()
                 .expectStatus()
                 .isOk()
@@ -45,10 +50,13 @@ class PaymentControllerTest {
         PaymentResponse response = new PaymentResponse();
         response.setSuccess(true);
         response.setBalance(BigDecimal.valueOf(9000));
-        when(paymentService.makePayment(any())).thenReturn(Mono.just(response));
+        when(paymentService.makePayment(eq("buyer"), any(BigDecimal.class))).thenReturn(Mono.just(response));
         webTestClient
+                .mutateWith(mockJwt())
+                .mutateWith(csrf())
                 .post()
                 .uri("/payments")
+                .header("X-User-Name", "buyer")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(
                         """

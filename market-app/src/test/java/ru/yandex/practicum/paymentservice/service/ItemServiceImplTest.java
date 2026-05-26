@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +22,8 @@ import ru.yandex.practicum.paymentservice.dto.ItemDto;
 import ru.yandex.practicum.paymentservice.dto.PagingDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
+import ru.yandex.practicum.paymentservice.entity.User;
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.enums.SortType;
 import ru.yandex.practicum.paymentservice.exception.ItemNotFoundException;
 import ru.yandex.practicum.paymentservice.mapper.ItemMapper;
@@ -43,6 +44,9 @@ class ItemServiceImplTest {
     @Mock
     private ItemMapper itemMapper;
 
+    @Mock
+    private CurrentUserService currentUserService;
+
     @InjectMocks
     private ItemServiceImpl itemService;
 
@@ -50,6 +54,7 @@ class ItemServiceImplTest {
     void shouldReturnItem() {
         Item item = TestData.item();
         CartItem cartItem = TestData.cartItem();
+        User user = TestData.user();
         ItemDto dto = new ItemDto(
                 item.getId(),
                 item.getTitle(),
@@ -58,7 +63,8 @@ class ItemServiceImplTest {
                 item.getPrice(),
                 cartItem.getCount());
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
-        when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+        when(currentUserService.getCurrentUser()).thenReturn(Optional.of(user));
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), 1L)).thenReturn(Optional.of(cartItem));
         when(itemMapper.toDto(item, cartItem.getCount())).thenReturn(dto);
         ItemDto actual = itemService.getItem(1L);
         assertThat(actual.count()).isEqualTo(cartItem.getCount());
@@ -85,9 +91,8 @@ class ItemServiceImplTest {
                         anyString(), anyString(), any(Pageable.class)))
                 .thenReturn(page);
 
+        when(currentUserService.getCurrentUser()).thenReturn(Optional.empty());
         when(itemMapper.toDto(item, 0)).thenReturn(dto);
-
-        when(cartItemRepository.findAllByItemIdIn(any())).thenReturn(Collections.emptyList());
 
         List<List<ItemDto>> result = itemService.getItems("", SortType.NO, 1, 5);
 

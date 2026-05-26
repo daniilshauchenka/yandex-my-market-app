@@ -21,12 +21,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.yandex.practicum.paymentservice.dto.OrderDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Order;
+import ru.yandex.practicum.paymentservice.entity.User;
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.exception.EmptyCartException;
 import ru.yandex.practicum.paymentservice.exception.OrderNotFoundException;
+import ru.yandex.practicum.paymentservice.exception.PaymentFailedException;
 import ru.yandex.practicum.paymentservice.mapper.OrderMapper;
 import ru.yandex.practicum.paymentservice.repository.CartItemRepository;
 import ru.yandex.practicum.paymentservice.repository.OrderRepository;
 import ru.yandex.practicum.paymentservice.service.impl.OrderServiceImpl;
+import ru.yandex.practicum.paymentservice.service.impl.PaymentGatewayService;
 import ru.yandex.practicum.paymentservice.util.TestData;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +45,12 @@ class OrderServiceImplTest {
     @Mock
     private OrderMapper orderMapper;
 
+    @Mock
+    private PaymentGatewayService paymentGatewayService;
+
+    @Mock
+    private CurrentUserService currentUserService;
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -51,7 +61,9 @@ class OrderServiceImplTest {
 
         List<OrderDto> expected = List.of(TestData.orderDto());
 
-        when(orderRepository.findAllByOrderByIdDesc()).thenReturn(orders);
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(orderRepository.findAllByUserIdOrderByIdDesc(user.getId())).thenReturn(orders);
 
         when(orderMapper.toDtoList(orders)).thenReturn(expected);
 
@@ -67,7 +79,9 @@ class OrderServiceImplTest {
 
         OrderDto dto = TestData.orderDto();
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(orderRepository.findByIdAndUserId(1L, user.getId())).thenReturn(Optional.of(order));
 
         when(orderMapper.toDto(order)).thenReturn(dto);
 
@@ -79,7 +93,9 @@ class OrderServiceImplTest {
     @Test
     void shouldThrowWhenOrderNotFound() {
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(orderRepository.findByIdAndUserId(1L, user.getId())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.getOrder(1L)).isInstanceOf(OrderNotFoundException.class);
     }
@@ -87,7 +103,9 @@ class OrderServiceImplTest {
     @Test
     void shouldThrowWhenCartIsEmpty() {
 
-        when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(Collections.emptyList());
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> orderService.buy()).isInstanceOf(EmptyCartException.class);
     }
@@ -101,7 +119,10 @@ class OrderServiceImplTest {
 
         savedOrder.setId(1L);
 
-        when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(List.of(cartItem));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(List.of(cartItem));
+        when(paymentGatewayService.pay(BigDecimal.valueOf(200))).thenReturn(true);
 
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
@@ -112,5 +133,16 @@ class OrderServiceImplTest {
         verify(orderRepository).save(any(Order.class));
 
         verify(cartItemRepository).deleteAllInBatch(anyList());
+    }
+
+    @Test
+    void shouldThrowWhenPaymentFails() {
+        CartItem cartItem = TestData.cartItem(BigDecimal.valueOf(100), 2);
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(List.of(cartItem));
+        when(paymentGatewayService.pay(BigDecimal.valueOf(200))).thenReturn(false);
+
+        assertThatThrownBy(() -> orderService.buy()).isInstanceOf(PaymentFailedException.class);
     }
 }
