@@ -1,12 +1,18 @@
+
 spring:
+  datasource:
+    url: ${MARKET_DB_JDBC_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:market_db}}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+
   r2dbc:
-    url: r2dbc:postgresql://localhost:5433/market_db
-    username: postgres
-    password: postgres
+    url: ${MARKET_DB_R2DBC_URL:r2dbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:market_db}}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 
   jpa:
@@ -18,19 +24,33 @@ spring:
         format_sql: true
 
   liquibase:
-    url: jdbc:postgresql://localhost:5433/market_db
-    user: postgres
-    password: postgres
+    url: ${MARKET_DB_JDBC_URL:jdbc:postgresql://localhost:${POSTGRES_PORT:5433}/${POSTGRES_DB:market_db}}
+    user: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     change-log: classpath:lq/db.changelog-master.xml
 
   messages:
     basename: messages
     encoding: UTF-8
 
+  security:
+    oauth2:
+      client:
+        registration:
+          payment-service:
+            provider: keycloak
+            client-id: ${MARKET_OAUTH_CLIENT_ID:market-app}
+            client-secret: ${MARKET_OAUTH_CLIENT_SECRET:market-app-secret}
+            authorization-grant-type: client_credentials
+        provider:
+          keycloak:
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:${KEYCLOAK_PORT:8003}/realms/${KEYCLOAK_REALM:market}/protocol/openid-connect/token}
+
 server:
   error:
     whitelabel:
       enabled: false
+  port: 8088
 
 logging:
   level:
