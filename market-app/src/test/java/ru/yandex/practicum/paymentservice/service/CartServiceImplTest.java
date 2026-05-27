@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
+import ru.yandex.practicum.paymentservice.dto.CartSummary;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
 import ru.yandex.practicum.paymentservice.entity.User;
@@ -65,6 +66,24 @@ class CartServiceImplTest {
         verify(cartItemRepository).findAllByUserIdOrderByIdAsc(user.getId());
 
         verify(cartItemMapper).toDtoList(cartItems);
+    }
+
+    @Test
+    void shouldReturnCartSummary() {
+        List<CartItem> cartItems = List.of(
+                TestData.cartItem(BigDecimal.valueOf(100), 2),
+                TestData.cartItem(BigDecimal.valueOf(50), 3));
+        List<CartItemDto> expectedItems = List.of(TestData.cartItemDto());
+
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(cartItems);
+        when(cartItemMapper.toDtoList(cartItems)).thenReturn(expectedItems);
+
+        CartSummary summary = cartService.getSummary();
+
+        assertThat(summary.items()).isEqualTo(expectedItems);
+        assertThat(summary.total()).isEqualByComparingTo("350");
     }
 
     @Test

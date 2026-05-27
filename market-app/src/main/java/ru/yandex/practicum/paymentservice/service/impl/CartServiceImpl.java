@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
+import ru.yandex.practicum.paymentservice.dto.CartSummary;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
 import ru.yandex.practicum.paymentservice.enums.Action;
@@ -34,17 +35,22 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public List<CartItemDto> getCartItems() {
-        Long userId = currentUserService.requireCurrentUser().getId();
-        List<CartItem> cartItems = cartItemRepository.findAllByUserIdOrderByIdAsc(userId);
-        return cartItemMapper.toDtoList(cartItems);
+        return getSummary().items();
     }
 
     @Override
     public BigDecimal getTotal() {
+        return getSummary().total();
+    }
+
+    @Override
+    public CartSummary getSummary() {
         Long userId = currentUserService.requireCurrentUser().getId();
-        return cartItemRepository.findAllByUserIdOrderByIdAsc(userId).stream()
+        List<CartItem> cartItems = cartItemRepository.findAllByUserIdOrderByIdAsc(userId);
+        BigDecimal total = cartItems.stream()
                 .map(CartItem::getTotalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new CartSummary(cartItemMapper.toDtoList(cartItems), total);
     }
 
     @Override
