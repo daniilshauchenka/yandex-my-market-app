@@ -2,4 +2,11 @@ server:
   port: 8111
 
 payment:
-  initial-balance: 10000
+  initial-balance: ${PAYMENT_INITIAL_BALANCE:10000}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:${KEYCLOAK_PORT:8003}/realms/${KEYCLOAK_REALM:market}}

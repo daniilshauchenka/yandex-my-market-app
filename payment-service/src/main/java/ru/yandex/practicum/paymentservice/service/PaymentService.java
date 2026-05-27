@@ -1,24 +1,37 @@
 package ru.yandex.practicum.paymentservice.service;
 
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.stereotype.Service;
 
 import ru.yandex.practicum.payment.model.PaymentResponse;
+import ru.yandex.practicum.paymentservice.config.PaymentProperties;
 
 import reactor.core.publisher.Mono;
 
 @Service
 public class PaymentService {
 
-    private final AtomicReference<BigDecimal> balance = new AtomicReference<>(BigDecimal.valueOf(10000));
+    private final Map<String, AtomicReference<BigDecimal>> balances = new ConcurrentHashMap<>();
+    private final PaymentProperties paymentProperties;
 
-    public Mono<BigDecimal> getBalance() {
-        return Mono.just(balance.get());
+    public PaymentService(PaymentProperties paymentProperties) {
+        this.paymentProperties = paymentProperties;
     }
 
-    public Mono<PaymentResponse> makePayment(BigDecimal amount) {
+    private AtomicReference<BigDecimal> balanceFor(String username) {
+        return balances.computeIfAbsent(username, u -> new AtomicReference<>(paymentProperties.initialBalance()));
+    }
+
+    public Mono<BigDecimal> getBalance(String username) {
+        return Mono.just(balanceFor(username).get());
+    }
+
+    public Mono<PaymentResponse> makePayment(String username, BigDecimal amount) {
+        AtomicReference<BigDecimal> balance = balanceFor(username);
         while (true) {
             BigDecimal current = balance.get();
             PaymentResponse response = new PaymentResponse();

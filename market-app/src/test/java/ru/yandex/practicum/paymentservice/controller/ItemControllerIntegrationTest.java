@@ -1,5 +1,6 @@
 package ru.yandex.practicum.paymentservice.controller;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,17 +49,19 @@ class ItemControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "buyer", roles = "USER")
     void shouldAddItemToCart() throws Exception {
 
-        mockMvc.perform(post("/items").param("id", "1").param("action", "PLUS"))
+        mockMvc.perform(post("/items").with(csrf()).param("id", "1").param("action", "PLUS"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("/items**"));
     }
 
     @Test
+    @WithMockUser(username = "buyer", roles = "USER")
     void shouldChangeItemCountFromItemPage() throws Exception {
 
-        mockMvc.perform(post("/items/1").param("action", "PLUS"))
+        mockMvc.perform(post("/items/1").with(csrf()).param("action", "PLUS"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/items/1"));
     }

@@ -1,5 +1,7 @@
 package ru.yandex.practicum.paymentservice.controller;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.Positive;
 
 import org.springframework.stereotype.Controller;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import ru.yandex.practicum.paymentservice.dto.CartSummary;
 import ru.yandex.practicum.paymentservice.enums.Action;
 import ru.yandex.practicum.paymentservice.service.CartService;
 import ru.yandex.practicum.paymentservice.service.impl.PaymentGatewayService;
@@ -40,10 +43,13 @@ public class CartController {
     }
 
     private void fillCartModel(Model model) {
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("total", cartService.getTotal());
+        CartSummary summary = cartService.getSummary();
+        model.addAttribute("items", summary.items());
+        BigDecimal total = summary.total();
+        model.addAttribute("total", total);
 
-        boolean paymentAvailable = paymentGatewayService.isAvailable();
+        BigDecimal balance = paymentGatewayService.tryGetBalance();
+        boolean paymentAvailable = balance != null && balance.compareTo(total) >= 0;
         model.addAttribute("paymentAvailable", paymentAvailable);
     }
 }

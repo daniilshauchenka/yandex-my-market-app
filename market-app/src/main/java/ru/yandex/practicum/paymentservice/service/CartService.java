@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
+import ru.yandex.practicum.paymentservice.dto.CartSummary;
 import ru.yandex.practicum.paymentservice.enums.Action;
 
 public interface CartService {
@@ -13,4 +14,6 @@ public interface CartService {
     void changeCount(Long itemId, Action action);
 
     BigDecimal getTotal();
+
+    CartSummary getSummary();
 }

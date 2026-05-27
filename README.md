@@ -34,6 +34,12 @@ mvn clean install
 docker compose up --build
 ```
 
+## Environment (.env)
+Docker Compose reads environment variables from `.env`.
+- `.env.example` is a reference template. Create your local `.env` next to it
+
+---
+
 ### 3. Tests
 ```bash
 mvn test

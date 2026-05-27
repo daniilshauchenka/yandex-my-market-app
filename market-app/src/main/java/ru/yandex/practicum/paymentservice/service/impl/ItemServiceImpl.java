@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.dto.ItemDto;
 import ru.yandex.practicum.paymentservice.dto.PagingDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
@@ -51,6 +52,8 @@ public class ItemServiceImpl implements ItemService {
     private final CartItemRepository cartItemRepository;
 
     private final ItemMapper itemMapper;
+
+    private final CurrentUserService currentUserService;
 
     @Override
     @Cacheable(value = "items-page", key = "#search + '-' + #sortType + '-' + #pageNumber + '-' + #pageSize")
@@ -113,8 +116,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private ItemDto enrich(Item item) {
-        Integer count = cartItemRepository
-                .findByItemId(item.getId())
+        Integer count = currentUserService
+                .getCurrentUser()
+                .flatMap(user -> cartItemRepository.findByUserIdAndItemId(user.getId(), item.getId()))
                 .map(CartItem::getCount)
                 .orElse(0);
         return itemMapper.toDto(item, count);
@@ -124,8 +128,12 @@ public class ItemServiceImpl implements ItemService {
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
+        Long userId = currentUserService.getCurrentUser().map(u -> u.getId()).orElse(null);
+        if (userId == null) {
+            return items.stream().map(item -> itemMapper.toDto(item, 0)).toList();
+        }
         List<Long> itemIds = items.stream().map(Item::getId).toList();
-        Map<Long, Integer> counts = cartItemRepository.findAllByItemIdIn(itemIds).stream()
+        Map<Long, Integer> counts = cartItemRepository.findAllByUserIdAndItemIdIn(userId, itemIds).stream()
                 .collect(Collectors.toMap(cartItem -> cartItem.getItem().getId(), CartItem::getCount));
         return items.stream()
                 .map(item -> itemMapper.toDto(item, counts.getOrDefault(item.getId(), 0)))

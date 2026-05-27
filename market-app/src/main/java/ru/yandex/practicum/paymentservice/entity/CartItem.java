@@ -22,7 +22,11 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "cart_items",
-        uniqueConstraints = {@UniqueConstraint(name = "uk_cart_items_item_id", columnNames = "item_id")})
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_cart_items_user_item_id",
+                    columnNames = {"user_id", "item_id"})
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,6 +41,10 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "item_id")
     private Item item;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     private Integer count;

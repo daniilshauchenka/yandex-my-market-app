@@ -16,13 +16,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import ru.yandex.practicum.paymentservice.dto.CartItemDto;
+import ru.yandex.practicum.paymentservice.dto.CartSummary;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
+import ru.yandex.practicum.paymentservice.entity.User;
 import ru.yandex.practicum.paymentservice.enums.Action;
 import ru.yandex.practicum.paymentservice.mapper.CartItemMapper;
 import ru.yandex.practicum.paymentservice.repository.CartItemRepository;
 import ru.yandex.practicum.paymentservice.repository.ItemRepository;
 import ru.yandex.practicum.paymentservice.service.impl.CartServiceImpl;
+import ru.yandex.practicum.paymentservice.config.security.CurrentUserService;
 import ru.yandex.practicum.paymentservice.util.TestData;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +40,9 @@ class CartServiceImplTest {
     @Mock
     private CartItemMapper cartItemMapper;
 
+    @Mock
+    private CurrentUserService currentUserService;
+
     @InjectMocks
     private CartServiceImpl cartService;
 
@@ -47,7 +53,9 @@ class CartServiceImplTest {
 
         List<CartItemDto> expected = List.of(TestData.cartItemDto());
 
-        when(cartItemRepository.findAllByOrderByIdAsc()).thenReturn(cartItems);
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(cartItems);
 
         when(cartItemMapper.toDtoList(cartItems)).thenReturn(expected);
 
@@ -55,9 +63,27 @@ class CartServiceImplTest {
 
         assertThat(actual).isEqualTo(expected);
 
-        verify(cartItemRepository).findAllByOrderByIdAsc();
+        verify(cartItemRepository).findAllByUserIdOrderByIdAsc(user.getId());
 
         verify(cartItemMapper).toDtoList(cartItems);
+    }
+
+    @Test
+    void shouldReturnCartSummary() {
+        List<CartItem> cartItems = List.of(
+                TestData.cartItem(BigDecimal.valueOf(100), 2),
+                TestData.cartItem(BigDecimal.valueOf(50), 3));
+        List<CartItemDto> expectedItems = List.of(TestData.cartItemDto());
+
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(cartItems);
+        when(cartItemMapper.toDtoList(cartItems)).thenReturn(expectedItems);
+
+        CartSummary summary = cartService.getSummary();
+
+        assertThat(summary.items()).isEqualTo(expectedItems);
+        assertThat(summary.total()).isEqualByComparingTo("350");
     }
 
     @Test
@@ -67,7 +93,9 @@ class CartServiceImplTest {
 
         CartItem second = TestData.cartItem(BigDecimal.valueOf(50), 3);
 
-        when(cartItemRepository.findAll()).thenReturn(List.of(first, second));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findAllByUserIdOrderByIdAsc(user.getId())).thenReturn(List.of(first, second));
 
         BigDecimal total = cartService.getTotal();
 
@@ -81,7 +109,10 @@ class CartServiceImplTest {
 
         Item item = TestData.item();
 
-        when(cartItemRepository.findByItemId(itemId)).thenReturn(Optional.empty());
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), itemId)).thenReturn(Optional.empty());
 
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
 
@@ -97,7 +128,9 @@ class CartServiceImplTest {
 
         cartItem.setCount(1);
 
-        when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), 1L)).thenReturn(Optional.of(cartItem));
 
         cartService.changeCount(1L, Action.PLUS);
 
@@ -113,7 +146,9 @@ class CartServiceImplTest {
 
         cartItem.setCount(2);
 
-        when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), 1L)).thenReturn(Optional.of(cartItem));
 
         cartService.changeCount(1L, Action.MINUS);
 
@@ -129,7 +164,9 @@ class CartServiceImplTest {
 
         cartItem.setCount(1);
 
-        when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), 1L)).thenReturn(Optional.of(cartItem));
 
         cartService.changeCount(1L, Action.MINUS);
 
@@ -141,7 +178,9 @@ class CartServiceImplTest {
 
         CartItem cartItem = TestData.cartItem();
 
-        when(cartItemRepository.findByItemId(1L)).thenReturn(Optional.of(cartItem));
+        User user = TestData.user();
+        when(currentUserService.requireCurrentUser()).thenReturn(user);
+        when(cartItemRepository.findByUserIdAndItemId(user.getId(), 1L)).thenReturn(Optional.of(cartItem));
 
         cartService.changeCount(1L, Action.DELETE);
 

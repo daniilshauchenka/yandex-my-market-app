@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ru.yandex.practicum.paymentservice.config.PaymentProperties;
 import ru.yandex.practicum.payment.model.PaymentResponse;
 
 class PaymentServiceTest {
@@ -17,19 +18,19 @@ class PaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        paymentService = new PaymentService();
+        paymentService = new PaymentService(new PaymentProperties(BigDecimal.valueOf(10000)));
     }
 
     @Test
     void shouldReturnInitialBalance() {
-        BigDecimal balance = paymentService.getBalance().block();
+        BigDecimal balance = paymentService.getBalance("buyer").block();
         assertEquals(BigDecimal.valueOf(10000), balance);
     }
 
     @Test
     void shouldDecreaseBalanceAfterPayment() {
         PaymentResponse response =
-                paymentService.makePayment(BigDecimal.valueOf(1000)).block();
+                paymentService.makePayment("buyer", BigDecimal.valueOf(1000)).block();
         assertTrue(response.getSuccess());
         assertEquals(BigDecimal.valueOf(9000), response.getBalance());
     }
@@ -37,7 +38,7 @@ class PaymentServiceTest {
     @Test
     void shouldFailPaymentWhenNotEnoughMoney() {
         PaymentResponse response =
-                paymentService.makePayment(BigDecimal.valueOf(20000)).block();
+                paymentService.makePayment("buyer", BigDecimal.valueOf(20000)).block();
         assertFalse(response.getSuccess());
         assertEquals(BigDecimal.valueOf(10000), response.getBalance());
     }

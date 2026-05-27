@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="007-add-user-ownership" author="shauchenka-d (generated)">
+
+        <addColumn tableName="cart_items">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql dbms="postgresql">
+            UPDATE cart_items
+            SET user_id = (SELECT id FROM users WHERE username = 'buyer')
+            WHERE user_id IS NULL;
+        </sql>
+
+        <addNotNullConstraint tableName="cart_items" columnName="user_id" columnDataType="BIGINT"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cart_items"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_cart_items_user"/>
+
+        <dropUniqueConstraint
+            tableName="cart_items"
+            constraintName="uk_cart_items_item_id"/>
+
+        <addUniqueConstraint
+            tableName="cart_items"
+            columnNames="user_id,item_id"
+            constraintName="uk_cart_items_user_item_id"/>
+
+        <createIndex tableName="cart_items" indexName="idx_cart_items_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <addColumn tableName="orders">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <sql dbms="postgresql">
+            UPDATE orders
+            SET user_id = (SELECT id FROM users WHERE username = 'buyer')
+            WHERE user_id IS NULL;
+        </sql>
+
+        <addNotNullConstraint tableName="orders" columnName="user_id" columnDataType="BIGINT"/>
+
+        <addForeignKeyConstraint
+            baseTableName="orders"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_orders_user"/>
+
+        <createIndex tableName="orders" indexName="idx_orders_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

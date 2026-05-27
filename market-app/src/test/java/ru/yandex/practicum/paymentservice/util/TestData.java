@@ -11,10 +11,15 @@ import ru.yandex.practicum.paymentservice.dto.OrderItemDto;
 import ru.yandex.practicum.paymentservice.entity.CartItem;
 import ru.yandex.practicum.paymentservice.entity.Item;
 import ru.yandex.practicum.paymentservice.entity.Order;
+import ru.yandex.practicum.paymentservice.entity.User;
 
 public final class TestData {
 
     private TestData() {}
+
+    public static User user() {
+        return User.builder().id(1L).username("buyer").password("pass").enabled(true).build();
+    }
 
     public static Item item() {
         return Item.builder()
@@ -43,6 +48,7 @@ public final class TestData {
 
         return CartItem.builder()
                 .id(1L)
+                .user(user())
                 .item(Item.builder().id(1L).title("Ball").price(price).build())
                 .count(count)
                 .build();
@@ -55,6 +61,7 @@ public final class TestData {
     public static Order order() {
         return Order.builder()
                 .id(1L)
+                .user(user())
                 .totalSum(BigDecimal.valueOf(100))
                 .items(new ArrayList<>())
                 .build();
